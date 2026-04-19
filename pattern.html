@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pattern Studio · Signal Cartography</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&family=Lora:wght@400;500&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0a0a0c;
+            --surface: #111114;
+            --surface2: #1a1a1f;
+            --border: #2a2a30;
+            --border-strong: #3a3a42;
+            --text: #e8e6dc;
+            --text-dim: #6a6a70;
+            --accent: #E8421A;
+            --accent-hover: #c8351a;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: var(--bg); color: var(--text);
+            min-height: 100vh; overflow: hidden;
+        }
+        .app { display: flex; height: 100vh; }
+        .sidebar {
+            width: 320px; flex-shrink: 0;
+            background: var(--surface);
+            border-right: 1px solid var(--border);
+            padding: 20px; overflow-y: auto;
+            display: flex; flex-direction: column;
+        }
+        .back {
+            display: inline-flex; align-items: center; gap: 6px;
+            font-family: 'IBM Plex Mono', monospace; font-size: 11px;
+            color: var(--text-dim); text-decoration: none;
+            letter-spacing: 1px; margin-bottom: 20px;
+            text-transform: uppercase;
+        }
+        .back:hover { color: var(--accent); }
+        .sidebar h1 { font-family: 'Lora', serif; font-size: 22px; font-weight: 500; margin-bottom: 2px; }
+        .sidebar .subtitle { color: var(--text-dim); font-size: 12px; margin-bottom: 20px; line-height: 1.4; }
+        .section { margin-bottom: 22px; }
+        .section-title {
+            font-size: 10px; font-weight: 600; text-transform: uppercase;
+            letter-spacing: 1.5px; color: var(--text-dim); margin-bottom: 10px;
+        }
+        .control { margin-bottom: 12px; }
+        .control label {
+            display: flex; justify-content: space-between; align-items: center;
+            font-size: 12px; color: var(--text); margin-bottom: 5px;
+        }
+        .control .val { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--text-dim); }
+        input[type="range"] {
+            width: 100%; height: 3px; background: var(--border);
+            border-radius: 2px; outline: none; -webkit-appearance: none;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none; width: 13px; height: 13px;
+            background: var(--accent); border-radius: 50%; cursor: pointer;
+        }
+        input[type="range"]::-moz-range-thumb {
+            width: 13px; height: 13px; background: var(--accent);
+            border-radius: 50%; border: none; cursor: pointer;
+        }
+        .btn {
+            background: var(--surface2); color: var(--text);
+            border: 1px solid var(--border); padding: 7px 12px;
+            border-radius: 5px; font-size: 11px; font-weight: 500;
+            cursor: pointer; transition: all 0.15s;
+            font-family: 'Poppins', sans-serif;
+        }
+        .btn:hover { background: var(--border); border-color: var(--border-strong); }
+        .btn.primary { background: var(--accent); border-color: var(--accent); color: white; }
+        .btn.primary:hover { background: var(--accent-hover); }
+        .btn.active { background: rgba(232,66,26,0.15); border-color: var(--accent); color: var(--accent); }
+        .btn-row { display: flex; gap: 5px; flex-wrap: wrap; }
+        .btn-row .btn { flex: 1; min-width: 0; text-align: center; }
+
+        .seed-row { display: flex; gap: 6px; align-items: center; margin-bottom: 8px; }
+        .seed-input {
+            flex: 1; background: var(--surface2); color: var(--text);
+            border: 1px solid var(--border); padding: 7px 10px;
+            border-radius: 5px; font-family: 'IBM Plex Mono', monospace;
+            font-size: 12px; text-align: center; outline: none;
+        }
+        .seed-input:focus { border-color: var(--accent); }
+
+        input[type="color"] {
+            width: 26px; height: 26px; border: none;
+            border-radius: 4px; cursor: pointer; background: none; padding: 0;
+        }
+        .color-row { display: flex; align-items: center; gap: 8px; }
+        .color-hex { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--text-dim); }
+
+        .palette-list { display: flex; flex-direction: column; gap: 4px; }
+        .palette-btn {
+            display: flex; align-items: center; gap: 10px;
+            padding: 6px 8px; border-radius: 5px; cursor: pointer;
+            border: 1px solid var(--border); background: var(--surface2);
+            transition: all 0.15s;
+        }
+        .palette-btn:hover { border-color: var(--border-strong); }
+        .palette-btn.active { border-color: var(--accent); background: rgba(232,66,26,0.08); }
+        .palette-btn .swatches { display: flex; gap: 2px; flex-shrink: 0; }
+        .palette-btn .swatch { width: 10px; height: 10px; border-radius: 2px; }
+        .palette-btn .pal-name { font-size: 11px; }
+
+        .shapes-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
+        .shape-btn {
+            padding: 6px 2px; font-size: 10px;
+            background: var(--surface2); color: var(--text);
+            border: 1px solid var(--border); border-radius: 4px;
+            cursor: pointer; transition: all 0.15s; text-align: center;
+        }
+        .shape-btn:hover { border-color: var(--border-strong); }
+        .shape-btn.active { border-color: var(--accent); background: rgba(232,66,26,0.1); color: var(--accent); }
+
+        .preset-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+        .preset-btn {
+            padding: 8px 6px; font-size: 10px; font-weight: 500;
+            background: var(--surface2); color: var(--text);
+            border: 1px solid var(--border); border-radius: 5px;
+            cursor: pointer; transition: all 0.15s;
+            text-align: center; line-height: 1.3;
+        }
+        .preset-btn:hover { border-color: var(--border-strong); }
+        .preset-btn.active { border-color: var(--accent); background: rgba(232,66,26,0.1); color: var(--accent); }
+        .preset-btn .title { font-weight: 600; display: block; margin-bottom: 2px; }
+        .preset-btn .desc { font-size: 9px; color: var(--text-dim); display: block; }
+        .preset-btn.active .desc { color: rgba(232,66,26,0.7); }
+
+        .toggle-row { display: flex; gap: 6px; align-items: center; font-size: 12px; }
+        .toggle-row input[type="checkbox"] { cursor: pointer; accent-color: var(--accent); }
+
+        .canvas-area {
+            flex: 1; display: flex; align-items: center; justify-content: center;
+            background: var(--bg); padding: 20px; position: relative;
+        }
+        #output {
+            max-width: 100%; max-height: 94vh;
+            border-radius: 4px; cursor: crosshair;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        }
+
+        .status {
+            position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%);
+            font-family: 'IBM Plex Mono', monospace; font-size: 10px;
+            letter-spacing: 1px; color: var(--text-dim);
+            background: rgba(17,17,20,0.85); backdrop-filter: blur(10px);
+            padding: 6px 14px; border-radius: 4px; border: 1px solid var(--border);
+            text-transform: uppercase;
+        }
+
+        @media (max-width: 900px) {
+            .app { flex-direction: column; }
+            .sidebar { width: 100%; max-height: 50vh; }
+        }
+    </style>
+</head>
+<body>
+<div class="app">
+    <div class="sidebar">
+        <a href="/" class="back">&larr; Signal Cartography</a>
+        <h1>Pattern Studio</h1>
+        <div class="subtitle">Noise-driven aura grid. Reproducible through seeds. Living when animated, stilled for export.</div>
+
+        <div class="section">
+            <div class="section-title">Preset</div>
+            <div class="preset-grid" id="preset-grid"></div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Seed</div>
+            <div class="seed-row">
+                <input type="number" class="seed-input" id="seed" value="42">
+                <button class="btn" onclick="prevSeed()">&larr;</button>
+                <button class="btn" onclick="nextSeed()">&rarr;</button>
+            </div>
+            <button class="btn" style="width:100%" onclick="randomSeed()">&#8635; Random Seed</button>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Shapes</div>
+            <div class="shapes-grid" id="shapes-grid"></div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Palette</div>
+            <div class="palette-list" id="palette-list"></div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Field</div>
+            <div class="control"><label>Cell Size <span class="val" id="cellSize-val">12</span></label>
+                <input type="range" id="cellSize" min="4" max="40" step="1" value="12"></div>
+            <div class="control"><label>Sparsity <span class="val" id="sparsity-val">0.40</span></label>
+                <input type="range" id="sparsity" min="0.0" max="0.7" step="0.02" value="0.40"></div>
+            <div class="control"><label>Noise Scale <span class="val" id="noiseScale-val">0.04</span></label>
+                <input type="range" id="noiseScale" min="0.01" max="0.15" step="0.005" value="0.04"></div>
+            <div class="control"><label>Octaves <span class="val" id="octaves-val">4</span></label>
+                <input type="range" id="octaves" min="1" max="6" step="1" value="4"></div>
+            <div class="control"><label>Flow Speed <span class="val" id="flowSpeed-val">0.15</span></label>
+                <input type="range" id="flowSpeed" min="0.0" max="0.5" step="0.01" value="0.15"></div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Render</div>
+            <div class="control"><label>Shape Scale <span class="val" id="shapeScale-val">0.9</span></label>
+                <input type="range" id="shapeScale" min="0.3" max="1.3" step="0.05" value="0.9"></div>
+            <div class="control"><label>Pulse <span class="val" id="pulse-val">0.15</span></label>
+                <input type="range" id="pulse" min="0.0" max="0.5" step="0.02" value="0.15"></div>
+            <div class="control"><label>Glow <span class="val" id="glow-val">0</span></label>
+                <input type="range" id="glow" min="0" max="12" step="1" value="0"></div>
+            <div class="control"><label>Background</label>
+                <div class="color-row"><input type="color" id="bgColor" value="#0a0a0c">
+                    <span class="color-hex" id="bgColor-hex">#0a0a0c</span></div></div>
+            <div class="toggle-row" style="margin-top:10px">
+                <input type="checkbox" id="mouseReactive" checked>
+                <label for="mouseReactive">Mouse reactivity</label>
+            </div>
+            <div class="toggle-row" style="margin-top:6px">
+                <input type="checkbox" id="animated" checked>
+                <label for="animated">Animated (unchecked = still)</label>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Export</div>
+            <div class="control">
+                <label>Resolution <span class="val" id="exportRes-val">2x</span></label>
+                <input type="range" id="exportRes" min="1" max="4" step="1" value="2">
+            </div>
+            <div class="btn-row" style="margin-top:8px">
+                <button class="btn primary" onclick="exportFrame()">Screenshot</button>
+                <button class="btn" id="recordBtn" onclick="toggleRecord()">Record 5s Loop</button>
+            </div>
+        </div>
+
+        <div style="flex:1; min-height:16px"></div>
+        <div class="btn-row">
+            <button class="btn" onclick="resetAll()">Reset</button>
+        </div>
+    </div>
+
+    <div class="canvas-area">
+        <canvas id="output"></canvas>
+        <div class="status" id="status">Ready</div>
+    </div>
+</div>
+
+<script>
+const PALETTES = [
+    { id: 'brand', label: 'Brand', colors: ['#E8421A','#F07820','#F5B810','#F2A08A','#8AAEE0','#D4C020','#7A9040','#FFFFFF'] },
+    { id: 'warm', label: 'Warm', colors: ['#E8421A','#F07820','#F5B810','#E37128'] },
+    { id: 'cool', label: 'Cool', colors: ['#8AAEE0','#A5B6C8','#7A9040','#D4C020'] },
+    { id: 'earth', label: 'Earth', colors: ['#8B6E4E','#A67C52','#C4A265','#D4C020','#7A9040','#4A5E3A'] },
+    { id: 'dusk', label: 'Dusk', colors: ['#2D1B4E','#5C3D7A','#A878C8','#E0B8D0','#F5D0C0','#FFE8D6'] },
+    { id: 'flora', label: 'Flora', colors: ['#D4C020','#7A9040','#4A7A3A','#A0D060','#F5B810','#FFFFFF'] },
+    { id: 'ocean', label: 'Ocean', colors: ['#0A2E4A','#1A5276','#2E86C1','#85C1E9','#D6EAF8','#FFFFFF'] },
+    { id: 'ember', label: 'Ember', colors: ['#3A0A0A','#8B1A1A','#E8421A','#F07820','#F5B810','#FFE0A0'] },
+    { id: 'mineral', label: 'Mineral', colors: ['#2C2C3A','#4A4A6A','#8A8AB0','#C0C0D8','#E8E8F0','#FFFFFF'] },
+    { id: 'mono-light', label: 'Mono Light', colors: ['#FFFFFF'] },
+    { id: 'mono-gold', label: 'Mono Gold', colors: ['#F5B810'] },
+];
+const SHAPES = ['circle','cross','rect','dot','ring','dash','diamond'];
+
+const PRESETS = [
+    { id: 'aura-brand', title: 'Aura', desc: 'Brand grid',
+      config: { palette: 'brand', activeShapes: ['circle','cross','rect','dot','ring','dash','diamond'],
+                cellSize: 12, sparsity: 0.40, noiseScale: 0.04, octaves: 4, flowSpeed: 0.15,
+                shapeScale: 0.9, pulse: 0.15, glow: 0, bgColor: '#0a0a0c', seed: 42 } },
+    { id: 'mudigere', title: 'Mudigere', desc: 'Earth dense',
+      config: { palette: 'earth', activeShapes: ['circle','dot','ring','diamond'],
+                cellSize: 10, sparsity: 0.30, noiseScale: 0.05, octaves: 4, flowSpeed: 0.12,
+                shapeScale: 0.85, pulse: 0.12, glow: 0, bgColor: '#14100c', seed: 7 } },
+    { id: 'ember', title: 'Ember', desc: 'Fire, soft glow',
+      config: { palette: 'ember', activeShapes: ['circle','cross','dot','diamond'],
+                cellSize: 14, sparsity: 0.38, noiseScale: 0.035, octaves: 4, flowSpeed: 0.18,
+                shapeScale: 0.95, pulse: 0.25, glow: 4, bgColor: '#0a0505', seed: 99 } },
+    { id: 'ocean', title: 'Ocean', desc: 'Cool clusters',
+      config: { palette: 'ocean', activeShapes: ['dot','ring','circle'],
+                cellSize: 10, sparsity: 0.42, noiseScale: 0.04, octaves: 5, flowSpeed: 0.1,
+                shapeScale: 0.9, pulse: 0.1, glow: 2, bgColor: '#02121f', seed: 23 } },
+    { id: 'dusk', title: 'Dusk', desc: 'Soft pastels',
+      config: { palette: 'dusk', activeShapes: ['circle','ring','dot'],
+                cellSize: 12, sparsity: 0.38, noiseScale: 0.03, octaves: 4, flowSpeed: 0.08,
+                shapeScale: 1.0, pulse: 0.2, glow: 3, bgColor: '#120a18', seed: 55 } },
+    { id: 'flora', title: 'Flora', desc: 'Growing field',
+      config: { palette: 'flora', activeShapes: ['diamond','dot','ring','cross'],
+                cellSize: 10, sparsity: 0.36, noiseScale: 0.06, octaves: 5, flowSpeed: 0.13,
+                shapeScale: 0.8, pulse: 0.15, glow: 1, bgColor: '#0a0e05', seed: 13 } },
+    { id: 'mineral', title: 'Mineral', desc: 'Cold blocks',
+      config: { palette: 'mineral', activeShapes: ['rect','cross','dash'],
+                cellSize: 14, sparsity: 0.42, noiseScale: 0.035, octaves: 3, flowSpeed: 0.06,
+                shapeScale: 0.85, pulse: 0.05, glow: 0, bgColor: '#0a0a10', seed: 11 } },
+    { id: 'constellation', title: 'Constellation', desc: 'Sparse stars',
+      config: { palette: 'mono-light', activeShapes: ['dot','ring','cross'],
+                cellSize: 16, sparsity: 0.58, noiseScale: 0.03, octaves: 3, flowSpeed: 0.05,
+                shapeScale: 0.7, pulse: 0.3, glow: 6, bgColor: '#05060a', seed: 777 } },
+];
+
+let state = {
+    palette: 'brand',
+    activeShapes: ['circle','cross','rect','dot','ring','dash','diamond'],
+    cellSize: 12, sparsity: 0.40, noiseScale: 0.04, octaves: 4, flowSpeed: 0.15,
+    shapeScale: 0.9, pulse: 0.15, glow: 0, bgColor: '#0a0a0c',
+    seed: 42, mouseReactive: true, animated: true,
+};
+
+const canvas = document.getElementById('output');
+const ctx = canvas.getContext('2d');
+let W = 1200, H = 1200;
+let cells = [];
+let gridCols = 0, gridRows = 0;
+let timeT = 0;
+let mousePos = { x: -1, y: -1 };
+let animFrame;
+let dirty = true;
+
+// Seeded RNG
+function mulberry32(a) {
+    return function() {
+        a |= 0; a = a + 0x6D2B79F5 | 0;
+        let t = Math.imul(a ^ a >>> 15, 1 | a);
+        t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+        return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    };
+}
+
+// Seeded noise hash
+let seedOffset = 0;
+function hashN(x, y) {
+    let h = (x + seedOffset) * 374761393 + (y + seedOffset * 7) * 668265263;
+    h = (h ^ (h >> 13)) * 1274126177;
+    return ((h ^ (h >> 16)) & 0x7fffffff) / 0x7fffffff;
+}
+function smoothN(t) { return t * t * (3 - 2 * t); }
+function noise2D(x, y) {
+    const ix = Math.floor(x), iy = Math.floor(y);
+    const fx = smoothN(x - ix), fy = smoothN(y - iy);
+    const a = hashN(ix, iy), b = hashN(ix+1, iy);
+    const c = hashN(ix, iy+1), d = hashN(ix+1, iy+1);
+    return a + (b-a)*fx + (c-a)*fy + (a-b-c+d)*fx*fy;
+}
+function fbm(x, y, octaves) {
+    let val = 0, amp = 0.5, freq = 1;
+    for (let i = 0; i < octaves; i++) { val += amp * noise2D(x*freq, y*freq); amp *= 0.5; freq *= 2; }
+    return val;
+}
+
+function getPaletteColors() {
+    return (PALETTES.find(p => p.id === state.palette) || PALETTES[0]).colors;
+}
+
+// UI builders
+function buildPresets() {
+    const grid = document.getElementById('preset-grid');
+    grid.innerHTML = '';
+    PRESETS.forEach(p => {
+        const btn = document.createElement('button');
+        btn.className = 'preset-btn'; btn.dataset.id = p.id;
+        btn.innerHTML = `<span class="title">${p.title}</span><span class="desc">${p.desc}</span>`;
+        btn.onclick = () => applyPreset(p);
+        grid.appendChild(btn);
+    });
+}
+function buildShapes() {
+    const grid = document.getElementById('shapes-grid');
+    grid.innerHTML = '';
+    SHAPES.forEach(s => {
+        const btn = document.createElement('button');
+        btn.className = 'shape-btn'; btn.dataset.id = s;
+        btn.textContent = s;
+        btn.onclick = () => toggleShape(s);
+        grid.appendChild(btn);
+    });
+    refreshShapesUI();
+}
+function buildPalettes() {
+    const list = document.getElementById('palette-list');
+    list.innerHTML = '';
+    PALETTES.forEach(p => {
+        const btn = document.createElement('div');
+        btn.className = 'palette-btn'; btn.dataset.id = p.id;
+        let sw = '<div class="swatches">';
+        p.colors.slice(0,6).forEach(c => { sw += `<div class="swatch" style="background:${c}"></div>`; });
+        sw += '</div>';
+        btn.innerHTML = sw + `<span class="pal-name">${p.label}</span>`;
+        btn.onclick = () => setPalette(p.id);
+        list.appendChild(btn);
+    });
+    refreshPalettesUI();
+}
+function refreshShapesUI() {
+    document.querySelectorAll('#shapes-grid .shape-btn').forEach(b =>
+        b.classList.toggle('active', state.activeShapes.includes(b.dataset.id)));
+}
+function refreshPalettesUI() {
+    document.querySelectorAll('#palette-list .palette-btn').forEach(b =>
+        b.classList.toggle('active', b.dataset.id === state.palette));
+}
+function refreshPresetUI(presetId) {
+    document.querySelectorAll('#preset-grid .preset-btn').forEach(b =>
+        b.classList.toggle('active', b.dataset.id === presetId));
+}
+function refreshAllControls() {
+    ['cellSize','sparsity','noiseScale','octaves','flowSpeed','shapeScale','pulse','glow','exportRes'].forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        if (id !== 'exportRes') el.value = state[id];
+        document.getElementById(id + '-val').textContent = id === 'exportRes'
+            ? el.value + 'x' : state[id];
+    });
+    document.getElementById('bgColor').value = state.bgColor;
+    document.getElementById('bgColor-hex').textContent = state.bgColor;
+    document.getElementById('seed').value = state.seed;
+    document.getElementById('mouseReactive').checked = state.mouseReactive;
+    document.getElementById('animated').checked = state.animated;
+    refreshShapesUI(); refreshPalettesUI();
+}
+
+function setPalette(id) {
+    state.palette = id; refreshPalettesUI(); refreshPresetUI(null);
+    regenerate();
+}
+function toggleShape(s) {
+    const i = state.activeShapes.indexOf(s);
+    if (i >= 0) { if (state.activeShapes.length > 1) state.activeShapes.splice(i,1); }
+    else state.activeShapes.push(s);
+    refreshShapesUI(); refreshPresetUI(null);
+    regenerate();
+}
+function applyPreset(p) {
+    Object.assign(state, p.config);
+    if (p.config.activeShapes) state.activeShapes = [...p.config.activeShapes];
+    refreshAllControls();
+    refreshPresetUI(p.id);
+    regenerate();
+}
+function resetAll() { applyPreset(PRESETS[0]); }
+function prevSeed() { state.seed = Math.max(1, state.seed - 1); document.getElementById('seed').value = state.seed; refreshPresetUI(null); regenerate(); }
+function nextSeed() { state.seed = state.seed + 1; document.getElementById('seed').value = state.seed; refreshPresetUI(null); regenerate(); }
+function randomSeed() { state.seed = Math.floor(Math.random() * 999999) + 1; document.getElementById('seed').value = state.seed; refreshPresetUI(null); regenerate(); }
+
+function wireControls() {
+    ['cellSize','sparsity','noiseScale','octaves','flowSpeed','shapeScale','pulse','glow'].forEach(id => {
+        document.getElementById(id).addEventListener('input', e => {
+            state[id] = parseFloat(e.target.value);
+            document.getElementById(id + '-val').textContent = e.target.value;
+            refreshPresetUI(null);
+            if (id === 'cellSize') regenerate();
+            else dirty = true;
+        });
+    });
+    document.getElementById('exportRes').addEventListener('input', e => {
+        document.getElementById('exportRes-val').textContent = e.target.value + 'x';
+    });
+    document.getElementById('bgColor').addEventListener('input', e => {
+        state.bgColor = e.target.value;
+        document.getElementById('bgColor-hex').textContent = e.target.value;
+        refreshPresetUI(null); dirty = true;
+    });
+    document.getElementById('seed').addEventListener('change', e => {
+        state.seed = parseInt(e.target.value) || 1;
+        refreshPresetUI(null); regenerate();
+    });
+    document.getElementById('mouseReactive').addEventListener('change', e => { state.mouseReactive = e.target.checked; });
+    document.getElementById('animated').addEventListener('change', e => {
+        state.animated = e.target.checked;
+        if (state.animated) startLoop();
+        else { cancelAnimationFrame(animFrame); drawOnce(); }
+    });
+
+    canvas.addEventListener('mousemove', e => {
+        const rect = canvas.getBoundingClientRect();
+        mousePos.x = (e.clientX - rect.left) / rect.width;
+        mousePos.y = (e.clientY - rect.top) / rect.height;
+    });
+    canvas.addEventListener('mouseleave', () => { mousePos = { x: -1, y: -1 }; });
+}
+
+function setCanvasSize() {
+    // Use square 1:1 canvas based on window
+    const size = Math.min(window.innerWidth - 360, window.innerHeight - 40);
+    const display = Math.max(300, size);
+    W = 1200; H = 1200;
+    canvas.width = W; canvas.height = H;
+    canvas.style.width = display + 'px';
+    canvas.style.height = display + 'px';
+}
+
+function regenerate() {
+    seedOffset = state.seed;
+    const cs = state.cellSize;
+    gridCols = Math.ceil(W / cs);
+    gridRows = Math.ceil(H / cs);
+    const rng = mulberry32(state.seed);
+    const pal = getPaletteColors();
+    const act = state.activeShapes.length ? state.activeShapes : ['dot'];
+    cells = [];
+    for (let i = 0; i < gridCols * gridRows; i++) {
+        const col = i % gridCols, row = Math.floor(i / gridCols);
+        const sN = fbm(col * 0.08 + 100, row * 0.08 + 100, 3);
+        const cN = fbm(col * 0.06 + 200, row * 0.06 + 200, 3);
+        cells.push({
+            shape: act[Math.floor(sN * act.length) % act.length],
+            colorIdx: Math.floor(cN * pal.length) % pal.length,
+            phase: rng() * Math.PI * 2,
+            baseSize: 0.4 + sN * 0.55,
+        });
+    }
+    dirty = true;
+    document.getElementById('status').textContent = `seed ${state.seed} · ${gridCols}×${gridRows} grid · ${state.palette} · ${state.activeShapes.length} shape${state.activeShapes.length===1?'':'s'}`;
+}
+
+function drawShape(x, y, s, shape, color, alpha) {
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = color; ctx.strokeStyle = color;
+    ctx.lineWidth = Math.max(1, s * 0.14);
+    const half = s / 2;
+    switch (shape) {
+        case 'circle': ctx.beginPath(); ctx.arc(x+half, y+half, half*0.85, 0, Math.PI*2); ctx.fill(); break;
+        case 'ring': ctx.beginPath(); ctx.arc(x+half, y+half, half*0.75, 0, Math.PI*2); ctx.stroke(); break;
+        case 'cross': { const arm = s*0.12, ext = half*0.8;
+            ctx.fillRect(x+half-arm, y+half-ext, arm*2, ext*2);
+            ctx.fillRect(x+half-ext, y+half-arm, ext*2, arm*2); break; }
+        case 'rect': ctx.fillRect(x+s*0.12, y+s*0.12, s*0.76, s*0.76); break;
+        case 'dot': ctx.beginPath(); ctx.arc(x+half, y+half, half*0.3, 0, Math.PI*2); ctx.fill(); break;
+        case 'dash': ctx.fillRect(x+s*0.1, y+half-s*0.08, s*0.8, s*0.16); break;
+        case 'diamond':
+            ctx.beginPath();
+            ctx.moveTo(x+half, y+s*0.1); ctx.lineTo(x+s*0.9, y+half);
+            ctx.lineTo(x+half, y+s*0.9); ctx.lineTo(x+s*0.1, y+half);
+            ctx.closePath(); ctx.fill(); break;
+    }
+    ctx.globalAlpha = 1;
+}
+
+function drawFrame() {
+    const cs = state.cellSize;
+    const pal = getPaletteColors();
+
+    ctx.fillStyle = state.bgColor;
+    ctx.fillRect(0, 0, W, H);
+
+    if (state.glow > 0) {
+        ctx.shadowColor = pal[0];
+        ctx.shadowBlur = state.glow;
+    } else ctx.shadowBlur = 0;
+
+    const mouseOn = state.mouseReactive && mousePos.x >= 0;
+
+    for (let row = 0; row < gridRows; row++) {
+        for (let col = 0; col < gridCols; col++) {
+            const i = row * gridCols + col;
+            const cell = cells[i];
+            if (!cell) continue;
+
+            const nx = col * state.noiseScale + timeT * state.flowSpeed + Math.sin(timeT * 0.3) * 0.5;
+            const ny = row * state.noiseScale + timeT * state.flowSpeed * 0.6 + Math.cos(timeT * 0.25) * 0.3;
+            const density = fbm(nx, ny, state.octaves);
+
+            let mouseBoost = 0;
+            if (mouseOn) {
+                const mx = col / gridCols, my = row / gridRows;
+                const dx = mx - mousePos.x, dy = my - mousePos.y;
+                const dist = Math.sqrt(dx*dx + dy*dy);
+                mouseBoost = Math.max(0, 1 - dist / 0.25) * 0.5;
+            }
+
+            if (density + mouseBoost < state.sparsity) continue;
+
+            const energy = Math.min(1, (density + mouseBoost - state.sparsity) * 3.5);
+            const pulseMul = 1 + Math.sin(timeT * 1.2 + cell.phase) * state.pulse * energy;
+            const drawSize = cs * cell.baseSize * state.shapeScale * pulseMul;
+            const x = col * cs + (cs - drawSize) / 2;
+            const y = row * cs + (cs - drawSize) / 2;
+
+            const color = pal[cell.colorIdx % pal.length];
+            drawShape(x, y, drawSize, cell.shape, color, Math.min(1, energy * 1.2));
+        }
+    }
+    ctx.shadowBlur = 0;
+}
+
+function drawOnce() {
+    timeT = 0;
+    drawFrame();
+    dirty = false;
+}
+
+function startLoop() {
+    cancelAnimationFrame(animFrame);
+    function loop() {
+        timeT += 0.016;
+        drawFrame();
+        animFrame = requestAnimationFrame(loop);
+    }
+    loop();
+}
+
+// Export
+function exportFrame() {
+    const scale = parseInt(document.getElementById('exportRes').value);
+    const ec = document.createElement('canvas');
+    ec.width = W * scale; ec.height = H * scale;
+    const ectx = ec.getContext('2d');
+    ectx.scale(scale, scale);
+    ectx.drawImage(canvas, 0, 0);
+    const link = document.createElement('a');
+    link.download = `pattern-${state.palette}-seed${state.seed}.png`;
+    link.href = ec.toDataURL('image/png');
+    link.click();
+}
+
+let mediaRec, recChunks = [], isRecording = false;
+function toggleRecord() {
+    if (isRecording) return;
+    if (!state.animated) {
+        alert('Enable Animated to record a loop.');
+        return;
+    }
+    recChunks = [];
+    const stream = canvas.captureStream(30);
+    try {
+        mediaRec = new MediaRecorder(stream, { mimeType: 'video/webm;codecs=vp9', videoBitsPerSecond: 8000000 });
+    } catch(e) { mediaRec = new MediaRecorder(stream); }
+    mediaRec.ondataavailable = e => { if (e.data.size > 0) recChunks.push(e.data); };
+    mediaRec.onstop = () => {
+        const blob = new Blob(recChunks, { type: 'video/webm' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.download = `pattern-${state.palette}-seed${state.seed}.webm`;
+        link.href = url; link.click();
+        document.getElementById('recordBtn').textContent = 'Record 5s Loop';
+        document.getElementById('recordBtn').classList.remove('primary');
+        isRecording = false;
+    };
+    mediaRec.start();
+    isRecording = true;
+    document.getElementById('recordBtn').textContent = 'Recording...';
+    document.getElementById('recordBtn').classList.add('primary');
+    setTimeout(() => { if (mediaRec.state !== 'inactive') mediaRec.stop(); }, 5000);
+}
+
+// Init
+setCanvasSize();
+window.addEventListener('resize', setCanvasSize);
+buildPresets();
+buildShapes();
+buildPalettes();
+wireControls();
+applyPreset(PRESETS[0]);
+startLoop();
+</script>
+</body>
+</html>

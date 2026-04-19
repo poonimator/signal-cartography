@@ -6,7 +6,7 @@
     <title>Signal Cartography — Pattern Portal</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&family=Lora:wght@400;500&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&family=Lora:wght@400;500&family=IBM+Plex+Mono:wght@300;400&display=swap" rel="stylesheet">
     <style>
         :root {
             --bg: #0a0a0c;
@@ -17,7 +17,6 @@
             --text: #e8e6dc;
             --text-dim: #6a6a70;
             --accent: #E8421A;
-            --accent-hover: #c8351a;
             --gold: #F5B810;
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -26,357 +25,239 @@
             background: var(--bg);
             min-height: 100vh;
             color: var(--text);
-            overflow: hidden;
+            overflow-x: hidden;
         }
-        .app { display: flex; height: 100vh; }
-        .sidebar {
-            width: 320px; flex-shrink: 0;
+
+        /* Ambient background canvas */
+        #bg-canvas {
+            position: fixed;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            opacity: 0.35;
+            pointer-events: none;
+        }
+
+        .page {
+            position: relative;
+            z-index: 1;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: 40px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            padding: 40px 0 80px;
+        }
+        .brand {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 11px;
+            letter-spacing: 3px;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            margin-bottom: 32px;
+        }
+        h1 {
+            font-family: 'Lora', serif;
+            font-size: 64px;
+            font-weight: 400;
+            line-height: 1.05;
+            letter-spacing: -0.02em;
+            max-width: 900px;
+            margin-bottom: 24px;
+        }
+        h1 em {
+            font-style: italic;
+            color: var(--accent);
+        }
+        .tagline {
+            font-size: 16px;
+            color: var(--text-dim);
+            max-width: 600px;
+            line-height: 1.6;
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-bottom: 80px;
+        }
+
+        .card {
+            position: relative;
             background: var(--surface);
-            border-right: 1px solid var(--border);
-            padding: 20px;
-            overflow-y: auto;
-            display: flex; flex-direction: column;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 32px;
+            text-decoration: none;
+            color: inherit;
+            transition: all 0.3s ease;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            min-height: 360px;
         }
-        .sidebar h1 { font-family: 'Lora', serif; font-size: 22px; font-weight: 500; margin-bottom: 2px; }
-        .sidebar .subtitle { color: var(--text-dim); font-size: 12px; margin-bottom: 20px; line-height: 1.4; }
-        .section { margin-bottom: 22px; }
-        .section-title {
-            font-size: 10px; font-weight: 600; text-transform: uppercase;
-            letter-spacing: 1.5px; color: var(--text-dim); margin-bottom: 10px;
+        .card:hover {
+            border-color: var(--accent);
+            transform: translateY(-2px);
+            box-shadow: 0 20px 40px rgba(232,66,26,0.08);
         }
-        .control { margin-bottom: 12px; }
-        .control label {
-            display: flex; justify-content: space-between; align-items: center;
-            font-size: 12px; color: var(--text); margin-bottom: 5px;
+        .card-preview {
+            height: 160px;
+            margin: -32px -32px 24px -32px;
+            position: relative;
+            overflow: hidden;
+            border-bottom: 1px solid var(--border);
+            background: #050506;
         }
-        .control .val { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--text-dim); }
-        input[type="range"] {
-            width: 100%; height: 3px; background: var(--border);
-            border-radius: 2px; outline: none; -webkit-appearance: none;
+        .card-preview canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
         }
-        input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none; width: 13px; height: 13px;
-            background: var(--accent); border-radius: 50%; cursor: pointer;
+        .card-number {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 11px;
+            letter-spacing: 2px;
+            color: var(--text-dim);
+            margin-bottom: 12px;
         }
-        input[type="range"]::-moz-range-thumb {
-            width: 13px; height: 13px; background: var(--accent);
-            border-radius: 50%; border: none; cursor: pointer;
+        .card h2 {
+            font-family: 'Lora', serif;
+            font-size: 32px;
+            font-weight: 500;
+            margin-bottom: 12px;
+            letter-spacing: -0.01em;
         }
-        .btn {
-            background: var(--surface2); color: var(--text);
-            border: 1px solid var(--border); padding: 7px 12px;
-            border-radius: 5px; font-size: 11px; font-weight: 500;
-            cursor: pointer; transition: all 0.15s;
-            font-family: 'Poppins', sans-serif;
+        .card p {
+            color: var(--text-dim);
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 24px;
+            flex: 1;
         }
-        .btn:hover { background: var(--border); border-color: var(--border-strong); }
-        .btn.primary { background: var(--accent); border-color: var(--accent); color: white; }
-        .btn.primary:hover { background: var(--accent-hover); }
-        .btn.active { background: rgba(232,66,26,0.15); border-color: var(--accent); color: var(--accent); }
-        .btn-row { display: flex; gap: 5px; flex-wrap: wrap; }
-        .btn-row .btn { flex: 1; min-width: 0; text-align: center; }
-        .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
-        .btn-grid .btn { text-align: center; }
-        select {
-            width: 100%; background: var(--surface2); color: var(--text);
-            border: 1px solid var(--border); padding: 6px 10px;
-            border-radius: 5px; font-size: 12px; font-family: 'Poppins', sans-serif;
-            cursor: pointer; outline: none;
+        .card-cta {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 12px;
+            letter-spacing: 1px;
+            color: var(--accent);
+            text-transform: uppercase;
         }
-        select:focus { border-color: var(--accent); }
-        input[type="color"] {
-            width: 26px; height: 26px; border: none;
-            border-radius: 4px; cursor: pointer; background: none; padding: 0;
+        .card-cta::after {
+            content: '\2192';
+            transition: transform 0.2s;
         }
-        .color-row { display: flex; align-items: center; gap: 8px; }
-        .color-hex { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--text-dim); }
-        .palette-list { display: flex; flex-direction: column; gap: 4px; }
-        .palette-btn {
-            display: flex; align-items: center; gap: 10px;
-            padding: 6px 8px; border-radius: 5px; cursor: pointer;
-            border: 1px solid var(--border); background: var(--surface2);
-            transition: all 0.15s;
+        .card:hover .card-cta::after {
+            transform: translateX(4px);
         }
-        .palette-btn:hover { border-color: var(--border-strong); }
-        .palette-btn.active { border-color: var(--accent); background: rgba(232,66,26,0.08); }
-        .palette-btn .swatches { display: flex; gap: 2px; flex-shrink: 0; }
-        .palette-btn .swatch { width: 10px; height: 10px; border-radius: 2px; }
-        .palette-btn .pal-name { font-size: 11px; color: var(--text); }
-        .canvas-area {
-            flex: 1; display: flex; flex-direction: column;
-            align-items: center; justify-content: center;
-            position: relative; background: var(--bg); padding: 16px;
+        .card-tags {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
         }
-        #output-canvas {
-            max-width: 100%; max-height: 88vh;
-            border-radius: 4px; cursor: crosshair;
+        .card-tag {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 10px;
+            letter-spacing: 0.5px;
+            padding: 3px 8px;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 3px;
+            color: var(--text-dim);
         }
-        .upload-zone {
-            border: 2px dashed var(--border);
-            border-radius: 12px; padding: 60px 40px;
-            text-align: center; cursor: pointer;
-            transition: all 0.2s; max-width: 500px;
+
+        footer {
+            margin-top: auto;
+            padding: 40px 0 20px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
         }
-        .upload-zone:hover { border-color: var(--accent); background: rgba(232,66,26,0.04); }
-        .upload-zone h2 { font-family: 'Lora', serif; font-size: 24px; margin-bottom: 8px; }
-        .upload-zone p { color: var(--text-dim); font-size: 13px; margin-bottom: 16px; }
-        .upload-zone input { display: none; }
-        .transport {
-            position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%);
-            display: flex; align-items: center; gap: 10px;
-            background: rgba(17,17,20,0.92); backdrop-filter: blur(12px);
-            padding: 8px 16px; border-radius: 8px; border: 1px solid var(--border);
+        footer .meta {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 10px;
+            letter-spacing: 1px;
+            color: var(--text-dim);
+            text-transform: uppercase;
         }
-        .transport .btn { padding: 5px 10px; font-size: 13px; }
-        .transport .time {
-            font-family: 'IBM Plex Mono', monospace; font-size: 11px;
-            color: var(--text-dim); min-width: 75px; text-align: center;
+        footer a {
+            color: var(--text-dim);
+            text-decoration: none;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 11px;
         }
-        #seek-bar { width: 180px; }
-        .hidden { display: none !important; }
-        .rec-indicator {
-            position: absolute; top: 16px; right: 16px;
-            display: flex; align-items: center; gap: 6px;
-            background: rgba(220,40,40,0.9); color: white;
-            padding: 5px 12px; border-radius: 5px;
-            font-size: 11px; font-weight: 600;
-            animation: recPulse 1s infinite;
-        }
-        @keyframes recPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
-        .preset-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
-        .preset-btn {
-            padding: 8px 6px; font-size: 10px; font-weight: 500;
-            background: var(--surface2); color: var(--text);
-            border: 1px solid var(--border); border-radius: 5px;
-            cursor: pointer; transition: all 0.15s;
-            text-align: center; line-height: 1.3;
-        }
-        .preset-btn:hover { border-color: var(--border-strong); }
-        .preset-btn.active { border-color: var(--accent); background: rgba(232,66,26,0.1); color: var(--accent); }
-        .preset-btn .title { font-weight: 600; display: block; margin-bottom: 2px; }
-        .preset-btn .desc { font-size: 9px; color: var(--text-dim); display: block; }
-        .preset-btn.active .desc { color: rgba(232,66,26,0.7); }
-        .shapes-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
-        .shape-btn {
-            padding: 6px 2px; font-size: 10px;
-            background: var(--surface2); color: var(--text);
-            border: 1px solid var(--border); border-radius: 4px;
-            cursor: pointer; transition: all 0.15s; text-align: center;
-        }
-        .shape-btn:hover { border-color: var(--border-strong); }
-        .shape-btn.active { border-color: var(--accent); background: rgba(232,66,26,0.1); color: var(--accent); }
-        .toggle-row { display: flex; gap: 6px; align-items: center; font-size: 12px; }
-        .toggle-row input[type="checkbox"] { cursor: pointer; accent-color: var(--accent); }
-        @media (max-width: 900px) {
-            .app { flex-direction: column; }
-            .sidebar { width: 100%; max-height: 50vh; }
-            .canvas-area { padding: 12px; }
+        footer a:hover { color: var(--accent); }
+
+        @media (max-width: 780px) {
+            h1 { font-size: 44px; }
+            .page { padding: 24px; }
+            .cards { grid-template-columns: 1fr; }
+            .card { min-height: auto; }
         }
     </style>
 </head>
 <body>
-<div class="app">
-    <div class="sidebar">
-        <h1>Signal Cartography</h1>
-        <div class="subtitle">A portal for computational patterns. Video · Morse · Aura. Drop a video, pick a mode.</div>
+    <canvas id="bg-canvas"></canvas>
 
-        <div class="section">
-            <div class="section-title">Preset</div>
-            <div class="preset-grid" id="preset-grid"></div>
+    <div class="page">
+        <header>
+            <div class="brand">Signal Cartography</div>
+            <h1>Computational <em>patterns</em> for images and motion.</h1>
+            <p class="tagline">Two tools. One generates living pattern compositions from noise and code. The other encodes any video into morse, ASCII, and aura-style grids.</p>
+        </header>
+
+        <div class="cards">
+            <a href="/pattern.html" class="card">
+                <div class="card-preview"><canvas id="preview-pattern"></canvas></div>
+                <div class="card-number">01 / GENERATE</div>
+                <h2>Pattern Studio</h2>
+                <p>A living, noise-driven grid of aura shapes. Pick a palette, tune the sparsity, let the fbm field breathe. Export stills or loops at any resolution.</p>
+                <div class="card-tags">
+                    <span class="card-tag">Generative</span>
+                    <span class="card-tag">7 shapes</span>
+                    <span class="card-tag">10 palettes</span>
+                    <span class="card-tag">Seeded</span>
+                </div>
+                <span class="card-cta">Open Pattern Studio</span>
+            </a>
+
+            <a href="/video.html" class="card">
+                <div class="card-preview"><canvas id="preview-video"></canvas></div>
+                <div class="card-number">02 / FILTER</div>
+                <h2>Video Shader</h2>
+                <p>Drop any video, get it rendered through morse code, ASCII, braille, or the aura grid. Motion-reactive, palette-driven, record to WebM with audio.</p>
+                <div class="card-tags">
+                    <span class="card-tag">Upload video</span>
+                    <span class="card-tag">6 modes</span>
+                    <span class="card-tag">Record WebM</span>
+                    <span class="card-tag">Motion-reactive</span>
+                </div>
+                <span class="card-cta">Open Video Shader</span>
+            </a>
         </div>
 
-        <div class="section">
-            <div class="section-title">Mode</div>
-            <div class="btn-grid" id="mode-grid"></div>
-        </div>
-
-        <div class="section">
-            <div class="section-title">Shapes (Aura)</div>
-            <div class="shapes-grid" id="shapes-grid"></div>
-            <div style="font-size:10px;color:var(--text-dim);margin-top:6px">Active when mode = Aura Grid</div>
-        </div>
-
-        <div class="section">
-            <div class="section-title">Palette</div>
-            <div class="palette-list" id="palette-list"></div>
-        </div>
-
-        <div class="section">
-            <div class="section-title">Grid</div>
-            <div class="control"><label>Cell Size <span class="val" id="cellSize-val">12</span></label>
-                <input type="range" id="cellSize" min="4" max="32" step="1" value="12"></div>
-            <div class="control"><label>Contrast <span class="val" id="contrast-val">1.4</span></label>
-                <input type="range" id="contrast" min="0.5" max="3.0" step="0.1" value="1.4"></div>
-            <div class="control"><label>Brightness <span class="val" id="brightness-val">0</span></label>
-                <input type="range" id="brightness" min="-50" max="50" step="5" value="0"></div>
-            <div class="control"><label>Threshold <span class="val" id="threshold-val">0.08</span></label>
-                <input type="range" id="threshold" min="0.0" max="0.4" step="0.01" value="0.08"></div>
-            <div class="control"><label>Sparsity (noise) <span class="val" id="sparsity-val">0.38</span></label>
-                <input type="range" id="sparsity" min="0.0" max="0.7" step="0.02" value="0.38"></div>
-            <div class="control"><label>Motion Reactivity <span class="val" id="reactivity-val">0.12</span></label>
-                <input type="range" id="reactivity" min="0.02" max="0.5" step="0.02" value="0.12"></div>
-        </div>
-
-        <div class="section">
-            <div class="section-title">Color</div>
-            <div class="control">
-                <select id="colorMode">
-                    <option value="palette" selected>Palette</option>
-                    <option value="mono">Monochrome</option>
-                    <option value="source">Source Color</option>
-                </select>
+        <footer>
+            <div class="meta">v 0.2 · computational art · pixel . morse . aura</div>
+            <div>
+                <a href="https://github.com/poonimator/signal-cartography" target="_blank">GitHub &#8599;</a>
             </div>
-            <div class="control"><label>Mono/Tint</label>
-                <div class="color-row"><input type="color" id="tintColor" value="#f5f5f0"><span class="color-hex" id="tintColor-hex">#f5f5f0</span></div></div>
-            <div class="control"><label>Background</label>
-                <div class="color-row"><input type="color" id="bgColor" value="#0a0a0c"><span class="color-hex" id="bgColor-hex">#0a0a0c</span></div></div>
-        </div>
-
-        <div class="section">
-            <div class="section-title">Effects</div>
-            <div class="control"><label>Scanlines <span class="val" id="scanlines-val">0.0</span></label>
-                <input type="range" id="scanlines" min="0" max="1.0" step="0.05" value="0.0"></div>
-            <div class="control"><label>Noise <span class="val" id="noiseAmt-val">0.02</span></label>
-                <input type="range" id="noiseAmt" min="0" max="0.15" step="0.01" value="0.02"></div>
-            <div class="control"><label>Glow <span class="val" id="glow-val">0</span></label>
-                <input type="range" id="glow" min="0" max="8" step="1" value="0"></div>
-            <div class="toggle-row" style="margin-top:10px">
-                <input type="checkbox" id="mouseReactive"><label for="mouseReactive">Mouse reactivity</label></div>
-            <div class="toggle-row" style="margin-top:6px">
-                <input type="checkbox" id="mutateOnMotion" checked><label for="mutateOnMotion">Mutate shapes on motion</label></div>
-        </div>
-
-        <div class="section">
-            <div class="section-title">Export</div>
-            <div class="btn-row">
-                <button class="btn primary" onclick="exportFrame()">Screenshot</button>
-                <button class="btn" id="recordBtn" onclick="toggleRecord()">Record</button>
-            </div>
-        </div>
-
-        <div style="flex:1; min-height:16px"></div>
-        <div class="btn-row">
-            <button class="btn" onclick="loadNewVideo()">Load Video</button>
-            <button class="btn" onclick="resetAll()">Reset</button>
-        </div>
+        </footer>
     </div>
-
-    <div class="canvas-area">
-        <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
-            <h2>Signal Cartography · Pattern Portal</h2>
-            <p>Drop a video to render it through computational pattern modes.<br>Morse code · ASCII · Aura grid · Braille</p>
-            <input type="file" id="fileInput" accept="video/*" onchange="handleFile(this.files[0])">
-        </div>
-        <canvas id="output-canvas" class="hidden"></canvas>
-        <div class="transport hidden" id="transport">
-            <button class="btn" id="playBtn" onclick="togglePlay()">&#9654;</button>
-            <input type="range" id="seek-bar" min="0" max="100" step="0.1" value="0" oninput="seek(this.value)">
-            <span class="time" id="timeDisplay">0:00 / 0:00</span>
-            <button class="btn" id="muteBtn" onclick="toggleMute()">&#128266;</button>
-        </div>
-        <div class="rec-indicator hidden" id="recIndicator">&#9679; REC</div>
-    </div>
-</div>
-
-<video id="srcVideo" style="display:none" playsinline loop></video>
-<canvas id="sample-canvas" style="display:none"></canvas>
 
 <script>
-const MORSE_MAP = {'A':'.-','B':'-...','C':'-.-.','D':'-..','E':'.','F':'..-.','G':'--.','H':'....','I':'..','J':'.---','K':'-.-','L':'.-..','M':'--','N':'-.','O':'---','P':'.--.','Q':'--.-','R':'.-.','S':'...','T':'-','U':'..-','V':'...-','W':'.--','X':'-..-','Y':'-.--','Z':'--..'};
-const ALPHA = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-const CHARSETS = {
-    'ascii-dense': ' .:-=+*#%@'.split(''),
-    'ascii-light': ' .,:-~=+*#'.split(''),
-    'blocks': [' ', '\u2591', '\u2592', '\u2593', '\u2588'],
-    'braille': [' ', '\u2801', '\u2803', '\u2807', '\u280F', '\u281F', '\u283F', '\u287F', '\u28FF'],
-};
-
-// ═══ AURA PALETTES (from aura-life) ═══
-const PALETTES = [
-    { id: 'brand', label: 'Brand', colors: ['#E8421A','#F07820','#F5B810','#F2A08A','#8AAEE0','#D4C020','#7A9040','#FFFFFF'] },
-    { id: 'warm', label: 'Warm', colors: ['#E8421A','#F07820','#F5B810','#E37128'] },
-    { id: 'cool', label: 'Cool', colors: ['#8AAEE0','#A5B6C8','#7A9040','#D4C020'] },
-    { id: 'earth', label: 'Earth', colors: ['#8B6E4E','#A67C52','#C4A265','#D4C020','#7A9040','#4A5E3A'] },
-    { id: 'dusk', label: 'Dusk', colors: ['#2D1B4E','#5C3D7A','#A878C8','#E0B8D0','#F5D0C0','#FFE8D6'] },
-    { id: 'flora', label: 'Flora', colors: ['#D4C020','#7A9040','#4A7A3A','#A0D060','#F5B810','#FFFFFF'] },
-    { id: 'ocean', label: 'Ocean', colors: ['#0A2E4A','#1A5276','#2E86C1','#85C1E9','#D6EAF8','#FFFFFF'] },
-    { id: 'ember', label: 'Ember', colors: ['#3A0A0A','#8B1A1A','#E8421A','#F07820','#F5B810','#FFE0A0'] },
-    { id: 'mineral', label: 'Mineral', colors: ['#2C2C3A','#4A4A6A','#8A8AB0','#C0C0D8','#E8E8F0','#FFFFFF'] },
-    { id: 'mono', label: 'Mono', colors: ['#FFFFFF'] },
-];
-
-const MODES = [
-    { id: 'aura', label: 'Aura Grid' },
-    { id: 'morse', label: 'Morse Code' },
-    { id: 'ascii-dense', label: 'ASCII Dense' },
-    { id: 'ascii-light', label: 'ASCII Light' },
-    { id: 'blocks', label: 'Blocks' },
-    { id: 'braille', label: 'Braille' },
-];
-
-const SHAPES = ['circle', 'cross', 'rect', 'dot', 'ring', 'dash', 'diamond'];
-
-const PRESETS = [
-    { id: 'aura-brand', title: 'Aura', desc: 'Brand palette grid',
-      config: { mode: 'aura', palette: 'brand', cellSize: 12, contrast: 1.4, threshold: 0.08, sparsity: 0.38,
-                activeShapes: ['circle','cross','rect','dot','ring','dash','diamond'], colorMode: 'palette',
-                tintColor: '#f5f5f0', bgColor: '#0a0a0c', scanlines: 0, noiseAmt: 0.02, glow: 0, mutateOnMotion: true, reactivity: 0.12 } },
-    { id: 'telegraph', title: 'Telegraph', desc: 'Morse on cream',
-      config: { mode: 'morse', palette: 'mono', cellSize: 10, contrast: 1.6, threshold: 0.1, sparsity: 0.38,
-                activeShapes: ['dot'], colorMode: 'mono', tintColor: '#f5e8c0', bgColor: '#1a1410',
-                scanlines: 0.2, noiseAmt: 0.04, glow: 2, mutateOnMotion: false, reactivity: 0.12 } },
-    { id: 'terminal', title: 'Terminal', desc: 'Green phosphor',
-      config: { mode: 'ascii-dense', palette: 'mono', cellSize: 8, contrast: 1.8, threshold: 0.12, sparsity: 0.38,
-                activeShapes: ['dot'], colorMode: 'mono', tintColor: '#50ff80', bgColor: '#001005',
-                scanlines: 0.5, noiseAmt: 0.06, glow: 4, mutateOnMotion: false, reactivity: 0.12 } },
-    { id: 'mudigere', title: 'Mudigere', desc: 'Earth tones',
-      config: { mode: 'aura', palette: 'earth', cellSize: 10, contrast: 1.5, threshold: 0.05, sparsity: 0.25,
-                activeShapes: ['circle','dot','ring','diamond'], colorMode: 'palette',
-                tintColor: '#f5f5f0', bgColor: '#0a0a0c', scanlines: 0, noiseAmt: 0.02, glow: 0, mutateOnMotion: true, reactivity: 0.12 } },
-    { id: 'ember', title: 'Ember', desc: 'Fire & motion',
-      config: { mode: 'aura', palette: 'ember', cellSize: 14, contrast: 1.7, threshold: 0.05, sparsity: 0.32,
-                activeShapes: ['circle','cross','dot','diamond'], colorMode: 'palette',
-                tintColor: '#f5f5f0', bgColor: '#0a0a0c', scanlines: 0, noiseAmt: 0.04, glow: 3, mutateOnMotion: true, reactivity: 0.15 } },
-    { id: 'ocean', title: 'Ocean', desc: 'Cool blue clusters',
-      config: { mode: 'aura', palette: 'ocean', cellSize: 10, contrast: 1.3, threshold: 0.06, sparsity: 0.42,
-                activeShapes: ['dot','ring','circle'], colorMode: 'palette',
-                tintColor: '#f5f5f0', bgColor: '#0a0a0c', scanlines: 0, noiseAmt: 0.02, glow: 1, mutateOnMotion: true, reactivity: 0.12 } },
-    { id: 'dusk', title: 'Dusk', desc: 'Soft braille',
-      config: { mode: 'braille', palette: 'dusk', cellSize: 8, contrast: 1.3, threshold: 0.1, sparsity: 0.38,
-                activeShapes: ['dot'], colorMode: 'palette',
-                tintColor: '#f5f5f0', bgColor: '#0a0a0c', scanlines: 0.15, noiseAmt: 0.03, glow: 2, mutateOnMotion: false, reactivity: 0.12 } },
-    { id: 'mineral', title: 'Mineral', desc: 'Cold blocks',
-      config: { mode: 'blocks', palette: 'mineral', cellSize: 10, contrast: 1.5, threshold: 0.1, sparsity: 0.38,
-                activeShapes: ['dot'], colorMode: 'palette',
-                tintColor: '#f5f5f0', bgColor: '#0a0a0c', scanlines: 0, noiseAmt: 0.02, glow: 0, mutateOnMotion: false, reactivity: 0.12 } },
-];
-
-const video = document.getElementById('srcVideo');
-const outCanvas = document.getElementById('output-canvas');
-const outCtx = outCanvas.getContext('2d');
-const sampleCanvas = document.getElementById('sample-canvas');
-const sampleCtx = sampleCanvas.getContext('2d', { willReadFrequently: true });
-
-let state = {
-    mode: 'aura', palette: 'brand',
-    activeShapes: ['circle','cross','rect','dot','ring','dash','diamond'],
-    cellSize: 12, contrast: 1.4, brightness: 0, threshold: 0.08, sparsity: 0.38,
-    reactivity: 0.12,
-    colorMode: 'palette', tintColor: '#f5f5f0', bgColor: '#0a0a0c',
-    scanlines: 0.0, noiseAmt: 0.02, glow: 0,
-    mouseReactive: false, mutateOnMotion: true,
-};
-
-let isPlaying = false, isMuted = false, animFrame = null;
-let mediaRecorder = null, recordedChunks = [], isRecording = false;
-let cells = [], gridCols = 0, gridRows = 0;
-let prevFrameData = null, timeT = 0;
-let cellMorseCache = [];
-let mousePos = { x: -1, y: -1 };
-const gridSampleCanvas = document.createElement('canvas');
-const gridSampleCtx = gridSampleCanvas.getContext('2d', { willReadFrequently: true });
-
-// Noise (aura-life fbm)
+// ── Shared noise (fbm) ──
 function hashN(x, y) {
     let h = x * 374761393 + y * 668265263;
     h = (h ^ (h >> 13)) * 1274126177;
@@ -395,467 +276,157 @@ function fbm(x, y, octaves) {
     for (let i = 0; i < octaves; i++) { val += amp * noise2D(x*freq, y*freq); amp *= 0.5; freq *= 2; }
     return val;
 }
-function mulberry32(a) {
-    return function() {
-        a |= 0; a = a + 0x6D2B79F5 | 0;
-        let t = Math.imul(a ^ a >>> 15, 1 | a);
-        t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
-        return ((t ^ t >>> 14) >>> 0) / 4294967296;
-    };
-}
 
-// UI builders
-function buildPresets() {
-    const grid = document.getElementById('preset-grid');
-    grid.innerHTML = '';
-    PRESETS.forEach(p => {
-        const btn = document.createElement('button');
-        btn.className = 'preset-btn'; btn.dataset.id = p.id;
-        btn.innerHTML = `<span class="title">${p.title}</span><span class="desc">${p.desc}</span>`;
-        btn.onclick = () => applyPreset(p);
-        grid.appendChild(btn);
-    });
-}
-function buildModes() {
-    const grid = document.getElementById('mode-grid');
-    grid.innerHTML = '';
-    MODES.forEach(m => {
-        const btn = document.createElement('button');
-        btn.className = 'btn'; btn.dataset.id = m.id;
-        btn.textContent = m.label;
-        btn.onclick = () => setMode(m.id);
-        grid.appendChild(btn);
-    });
-    refreshModeUI();
-}
-function buildShapes() {
-    const grid = document.getElementById('shapes-grid');
-    grid.innerHTML = '';
-    SHAPES.forEach(s => {
-        const btn = document.createElement('button');
-        btn.className = 'shape-btn'; btn.dataset.id = s;
-        btn.textContent = s;
-        btn.onclick = () => toggleShape(s);
-        grid.appendChild(btn);
-    });
-    refreshShapesUI();
-}
-function buildPalettes() {
-    const list = document.getElementById('palette-list');
-    list.innerHTML = '';
-    PALETTES.forEach(p => {
-        const btn = document.createElement('div');
-        btn.className = 'palette-btn'; btn.dataset.id = p.id;
-        let swatches = '<div class="swatches">';
-        p.colors.slice(0,6).forEach(c => { swatches += `<div class="swatch" style="background:${c}"></div>`; });
-        swatches += '</div>';
-        btn.innerHTML = swatches + `<span class="pal-name">${p.label}</span>`;
-        btn.onclick = () => setPalette(p.id);
-        list.appendChild(btn);
-    });
-    refreshPalettesUI();
-}
-function refreshModeUI() {
-    document.querySelectorAll('#mode-grid .btn').forEach(b => b.classList.toggle('active', b.dataset.id === state.mode));
-}
-function refreshShapesUI() {
-    document.querySelectorAll('#shapes-grid .shape-btn').forEach(b => b.classList.toggle('active', state.activeShapes.includes(b.dataset.id)));
-}
-function refreshPalettesUI() {
-    document.querySelectorAll('#palette-list .palette-btn').forEach(b => b.classList.toggle('active', b.dataset.id === state.palette));
-}
-function refreshPresetUI(presetId) {
-    document.querySelectorAll('#preset-grid .preset-btn').forEach(b => b.classList.toggle('active', b.dataset.id === presetId));
-}
-function refreshAllControls() {
-    ['cellSize','contrast','brightness','threshold','sparsity','reactivity','scanlines','noiseAmt','glow'].forEach(id => {
-        const el = document.getElementById(id);
-        if (!el) return;
-        el.value = state[id];
-        document.getElementById(id + '-val').textContent = state[id];
-    });
-    document.getElementById('colorMode').value = state.colorMode;
-    document.getElementById('tintColor').value = state.tintColor;
-    document.getElementById('tintColor-hex').textContent = state.tintColor;
-    document.getElementById('bgColor').value = state.bgColor;
-    document.getElementById('bgColor-hex').textContent = state.bgColor;
-    document.getElementById('mouseReactive').checked = state.mouseReactive;
-    document.getElementById('mutateOnMotion').checked = state.mutateOnMotion;
-    refreshModeUI(); refreshShapesUI(); refreshPalettesUI();
-}
-
-function setMode(id) { state.mode = id; refreshModeUI(); refreshPresetUI(null); resetCells(); }
-function setPalette(id) { state.palette = id; refreshPalettesUI(); refreshPresetUI(null); resetCells(); }
-function toggleShape(shape) {
-    const i = state.activeShapes.indexOf(shape);
-    if (i >= 0) { if (state.activeShapes.length > 1) state.activeShapes.splice(i, 1); }
-    else state.activeShapes.push(shape);
-    refreshShapesUI(); refreshPresetUI(null); resetCells();
-}
-function applyPreset(p) {
-    Object.assign(state, p.config);
-    if (p.config.activeShapes) state.activeShapes = [...p.config.activeShapes];
-    refreshAllControls();
-    refreshPresetUI(p.id);
-    resetCells();
-}
-function resetCells() { cells = []; gridCols = 0; gridRows = 0; prevFrameData = null; cellMorseCache = []; }
-function resetAll() { applyPreset(PRESETS[0]); }
-
-function wireControls() {
-    ['cellSize','contrast','brightness','threshold','sparsity','reactivity','scanlines','noiseAmt','glow'].forEach(id => {
-        const el = document.getElementById(id);
-        el.addEventListener('input', () => {
-            state[id] = parseFloat(el.value);
-            document.getElementById(id + '-val').textContent = el.value;
-            refreshPresetUI(null);
-            if (id === 'cellSize') resetCells();
-        });
-    });
-    document.getElementById('colorMode').addEventListener('change', e => { state.colorMode = e.target.value; refreshPresetUI(null); });
-    document.getElementById('tintColor').addEventListener('input', e => {
-        state.tintColor = e.target.value;
-        document.getElementById('tintColor-hex').textContent = e.target.value;
-        refreshPresetUI(null);
-    });
-    document.getElementById('bgColor').addEventListener('input', e => {
-        state.bgColor = e.target.value;
-        document.getElementById('bgColor-hex').textContent = e.target.value;
-        refreshPresetUI(null);
-    });
-    document.getElementById('mouseReactive').addEventListener('change', e => { state.mouseReactive = e.target.checked; });
-    document.getElementById('mutateOnMotion').addEventListener('change', e => { state.mutateOnMotion = e.target.checked; });
-    outCanvas.addEventListener('mousemove', e => {
-        const rect = outCanvas.getBoundingClientRect();
-        mousePos.x = (e.clientX - rect.left) / rect.width;
-        mousePos.y = (e.clientY - rect.top) / rect.height;
-    });
-    outCanvas.addEventListener('mouseleave', () => { mousePos = { x: -1, y: -1 }; });
-}
-
-function handleFile(file) {
-    if (!file) return;
-    let url = URL.createObjectURL(file);
-    video.src = url; video.muted = isMuted;
-    video.addEventListener('loadedmetadata', () => {
-        setupCanvas();
-        document.getElementById('uploadZone').classList.add('hidden');
-        outCanvas.classList.remove('hidden');
-        document.getElementById('transport').classList.remove('hidden');
-        video.play(); isPlaying = true;
-        document.getElementById('playBtn').innerHTML = '&#9646;&#9646;';
-        renderLoop();
-    }, { once: true });
-}
-function loadNewVideo() { document.getElementById('fileInput').click(); }
-document.addEventListener('dragover', e => e.preventDefault());
-document.addEventListener('drop', e => {
-    e.preventDefault();
-    if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
-});
-function setupCanvas() {
-    let vw = video.videoWidth, vh = video.videoHeight;
-    outCanvas.width = vw; outCanvas.height = vh;
-    sampleCanvas.width = vw; sampleCanvas.height = vh;
-    resetCells();
-}
-
-function togglePlay() {
-    if (isPlaying) {
-        video.pause(); isPlaying = false;
-        document.getElementById('playBtn').innerHTML = '&#9654;';
-    } else {
-        video.play(); isPlaying = true;
-        document.getElementById('playBtn').innerHTML = '&#9646;&#9646;';
-        renderLoop();
+// ── Full-page ambient bg ──
+(function ambient() {
+    const canvas = document.getElementById('bg-canvas');
+    const ctx = canvas.getContext('2d');
+    let w, h, t = 0;
+    const PAL = ['#E8421A','#F07820','#F5B810','#8AAEE0','#7A9040','#D4C020'];
+    function resize() {
+        w = canvas.width = window.innerWidth;
+        h = canvas.height = window.innerHeight;
     }
-}
-function toggleMute() {
-    isMuted = !isMuted; video.muted = isMuted;
-    document.getElementById('muteBtn').innerHTML = isMuted ? '&#128263;' : '&#128266;';
-}
-function seek(val) { if (video.duration) video.currentTime = (val / 100) * video.duration; }
-function updateTransport() {
-    if (!video.duration) return;
-    document.getElementById('seek-bar').value = (video.currentTime / video.duration) * 100;
-    const fmt = s => Math.floor(s/60) + ':' + String(Math.floor(s%60)).padStart(2,'0');
-    document.getElementById('timeDisplay').textContent = fmt(video.currentTime) + ' / ' + fmt(video.duration);
-}
-
-function renderLoop() {
-    if (!isPlaying && !isRecording) return;
-    renderFrame();
-    updateTransport();
-    timeT += 0.016;
-    animFrame = requestAnimationFrame(renderLoop);
-}
-function getPaletteColors() {
-    const p = PALETTES.find(x => x.id === state.palette) || PALETTES[0];
-    return p.colors;
-}
-function hexToRGB(hex) {
-    return [parseInt(hex.substr(1,2),16), parseInt(hex.substr(3,2),16), parseInt(hex.substr(5,2),16)];
-}
-
-function ensureCellGrid(vw, vh) {
-    const cs = state.cellSize;
-    const cols = Math.floor(vw / cs);
-    const rows = Math.floor(vh / cs);
-    if (cols === gridCols && rows === gridRows && cells.length === cols * rows) return;
-    gridCols = cols; gridRows = rows;
-    cells = []; cellMorseCache = [];
-    const rng = mulberry32(12345);
-    const pal = getPaletteColors();
-    const activeShapes = state.activeShapes.length ? state.activeShapes : ['dot'];
-    for (let i = 0; i < cols * rows; i++) {
-        const col = i % cols, row = Math.floor(i / cols);
-        const sNoise = fbm(col * 0.08 + 100, row * 0.08 + 100, 3);
-        const cNoise = fbm(col * 0.06 + 200, row * 0.06 + 200, 3);
-        cells.push({
-            shape: activeShapes[Math.floor(sNoise * activeShapes.length) % activeShapes.length],
-            colorIdx: Math.floor(cNoise * pal.length) % pal.length,
-            phase: rng() * Math.PI * 2,
-            energy: 0, targetEnergy: 0, motionAccum: 0,
-            baseSize: 0.4 + sNoise * 0.55,
-        });
-        cellMorseCache.push(MORSE_MAP[ALPHA[Math.floor(rng() * 26)]]);
+    resize();
+    window.addEventListener('resize', resize);
+    function draw() {
+        t += 0.003;
+        ctx.fillStyle = '#0a0a0c';
+        ctx.fillRect(0, 0, w, h);
+        const cs = 18;
+        const cols = Math.ceil(w / cs);
+        const rows = Math.ceil(h / cs);
+        for (let row = 0; row < rows; row++) {
+            for (let col = 0; col < cols; col++) {
+                const nx = col * 0.04 + t * 0.15 + Math.sin(t*0.3) * 0.5;
+                const ny = row * 0.04 + t * 0.08 + Math.cos(t*0.25) * 0.3;
+                const density = fbm(nx, ny, 4);
+                if (density > 0.55) {
+                    const col_c = PAL[Math.floor(fbm(col*0.06, row*0.06, 2) * PAL.length) % PAL.length];
+                    ctx.fillStyle = col_c;
+                    const size = cs * (0.2 + density * 0.35);
+                    ctx.globalAlpha = 0.4 + density * 0.4;
+                    ctx.beginPath();
+                    ctx.arc(col*cs + cs/2, row*cs + cs/2, size*0.5, 0, Math.PI*2);
+                    ctx.fill();
+                }
+            }
+        }
+        ctx.globalAlpha = 1;
+        requestAnimationFrame(draw);
     }
-    prevFrameData = null;
-    gridSampleCanvas.width = cols;
-    gridSampleCanvas.height = rows;
-}
+    draw();
+})();
 
-function renderFrame() {
-    const vw = video.videoWidth, vh = video.videoHeight;
-    if (!vw || !vh) return;
-    ensureCellGrid(vw, vh);
-    const cs = state.cellSize;
-    const cols = gridCols, rows = gridRows;
+// ── Card preview: pattern (aura-style shapes) ──
+(function previewPattern() {
+    const canvas = document.getElementById('preview-pattern');
+    const ctx = canvas.getContext('2d');
+    let w, h, t = 0;
+    const PAL = ['#E8421A','#F07820','#F5B810','#F2A08A','#8AAEE0','#D4C020','#7A9040'];
+    const SHAPES = ['circle','cross','dot','ring','diamond','rect'];
+    function resize() {
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        w = canvas.clientWidth; h = canvas.clientHeight;
+        canvas.width = w * dpr; canvas.height = h * dpr;
+        ctx.setTransform(dpr,0,0,dpr,0,0);
+    }
+    resize(); window.addEventListener('resize', resize);
+    function drawShape(x, y, s, shape, color, alpha) {
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = color; ctx.strokeStyle = color;
+        ctx.lineWidth = Math.max(1, s*0.14);
+        const half = s/2;
+        switch(shape) {
+            case 'circle': ctx.beginPath(); ctx.arc(x+half,y+half,half*0.85,0,Math.PI*2); ctx.fill(); break;
+            case 'ring': ctx.beginPath(); ctx.arc(x+half,y+half,half*0.75,0,Math.PI*2); ctx.stroke(); break;
+            case 'cross': { const arm = s*0.12, ext = half*0.8;
+                ctx.fillRect(x+half-arm,y+half-ext,arm*2,ext*2);
+                ctx.fillRect(x+half-ext,y+half-arm,ext*2,arm*2); break; }
+            case 'rect': ctx.fillRect(x+s*0.12,y+s*0.12,s*0.76,s*0.76); break;
+            case 'dot': ctx.beginPath(); ctx.arc(x+half,y+half,half*0.3,0,Math.PI*2); ctx.fill(); break;
+            case 'diamond':
+                ctx.beginPath();
+                ctx.moveTo(x+half,y+s*0.1); ctx.lineTo(x+s*0.9,y+half);
+                ctx.lineTo(x+half,y+s*0.9); ctx.lineTo(x+s*0.1,y+half);
+                ctx.closePath(); ctx.fill(); break;
+        }
+        ctx.globalAlpha = 1;
+    }
+    function draw() {
+        t += 0.012;
+        ctx.fillStyle = '#050506';
+        ctx.fillRect(0,0,w,h);
+        const cs = 10;
+        const cols = Math.ceil(w/cs), rows = Math.ceil(h/cs);
+        for (let row=0; row<rows; row++) {
+            for (let col=0; col<cols; col++) {
+                const nx = col*0.08 + t*0.2;
+                const ny = row*0.08 + t*0.1;
+                const d = fbm(nx, ny, 4);
+                if (d > 0.4) {
+                    const sIdx = Math.floor(fbm(col*0.08+100, row*0.08+100, 3) * SHAPES.length) % SHAPES.length;
+                    const cIdx = Math.floor(fbm(col*0.06+200, row*0.06+200, 3) * PAL.length) % PAL.length;
+                    const energy = (d - 0.4) * 2.5;
+                    drawShape(col*cs, row*cs, cs*0.9, SHAPES[sIdx], PAL[cIdx], Math.min(1, energy));
+                }
+            }
+        }
+        requestAnimationFrame(draw);
+    }
+    setTimeout(() => { resize(); draw(); }, 50);
+})();
 
-    // Sample at grid resolution
-    gridSampleCtx.drawImage(video, 0, 0, cols, rows);
-    const frame = gridSampleCtx.getImageData(0, 0, cols, rows);
-    const data = frame.data;
-    const prev = prevFrameData;
-
-    const pal = getPaletteColors();
-    const tintRGB = hexToRGB(state.tintColor);
-
-    outCtx.fillStyle = state.bgColor;
-    outCtx.fillRect(0, 0, vw, vh);
-
-    const mouseActive = state.mouseReactive && mousePos.x >= 0;
-
-    if (state.glow > 0) {
-        outCtx.shadowColor = state.colorMode === 'mono'
-            ? `rgba(${tintRGB[0]},${tintRGB[1]},${tintRGB[2]},0.5)` : 'rgba(255,255,255,0.3)';
-        outCtx.shadowBlur = state.glow;
-    } else outCtx.shadowBlur = 0;
-
-    for (let row = 0; row < rows; row++) {
-        for (let col = 0; col < cols; col++) {
-            const i = row * cols + col;
-            const pi = i * 4;
-            const r = data[pi], g = data[pi+1], b = data[pi+2];
-            let lum = (r*0.299 + g*0.587 + b*0.114) / 255;
-
-            let motion = 0;
-            if (prev) motion = (Math.abs(r-prev[pi]) + Math.abs(g-prev[pi+1]) + Math.abs(b-prev[pi+2])) / (255*3);
-
-            const cell = cells[i];
-            cell.motionAccum = cell.motionAccum * 0.92 + motion * 3.5;
-            cell.motionAccum = Math.min(cell.motionAccum, 1.5);
-
-            lum = (lum - 0.5) * state.contrast + 0.5 + state.brightness / 255;
-            if (state.noiseAmt > 0) lum += (Math.random() - 0.5) * state.noiseAmt * 2;
-            lum = Math.max(0, Math.min(1, lum));
-
-            const noiseX = col * 0.04 + timeT * 0.15 + Math.sin(timeT * 0.3) * 0.5;
-            const noiseY = row * 0.04 + timeT * 0.08 + Math.cos(timeT * 0.25) * 0.3;
-            const density = fbm(noiseX, noiseY, 4);
-
-            let mouseBoost = 0;
-            if (mouseActive) {
+// ── Card preview: video shader (morse-style) ──
+(function previewVideo() {
+    const canvas = document.getElementById('preview-video');
+    const ctx = canvas.getContext('2d');
+    let w, h, t = 0;
+    function resize() {
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        w = canvas.clientWidth; h = canvas.clientHeight;
+        canvas.width = w * dpr; canvas.height = h * dpr;
+        ctx.setTransform(dpr,0,0,dpr,0,0);
+    }
+    resize(); window.addEventListener('resize', resize);
+    function draw() {
+        t += 0.012;
+        ctx.fillStyle = '#050506';
+        ctx.fillRect(0,0,w,h);
+        const cs = 8;
+        const cols = Math.ceil(w/cs), rows = Math.ceil(h/cs);
+        ctx.fillStyle = '#f5e8c0';
+        for (let row=0; row<rows; row++) {
+            for (let col=0; col<cols; col++) {
+                // Simulate an image-like brightness: horizontal band with soft circular hotspot
                 const nx = col / cols, ny = row / rows;
-                const dx = nx - mousePos.x, dy = ny - mousePos.y;
+                const cx = 0.5 + Math.sin(t * 0.6) * 0.2;
+                const cy = 0.5 + Math.cos(t * 0.5) * 0.1;
+                const dx = nx - cx, dy = ny - cy;
                 const dist = Math.sqrt(dx*dx + dy*dy);
-                mouseBoost = Math.max(0, 1 - dist / 0.25) * 0.6;
-            }
-
-            const noiseAlive = (density > state.sparsity || mouseBoost > 0.1);
-            const lumAlive = lum > state.threshold;
-
-            const cx = col * cs + cs * 0.5;
-            const cy = row * cs + cs * 0.5;
-            const x = col * cs, y = row * cs;
-
-            if (state.mode === 'aura') {
-                const alive = (noiseAlive && lumAlive) ? 1 : 0;
-                cell.targetEnergy = alive * Math.min(1, lum * 0.5 + cell.motionAccum * 0.9 + mouseBoost);
-
-                if (state.mutateOnMotion && motion > 0.06) {
-                    if (Math.random() < motion * 2.5 && state.activeShapes.length) {
-                        cell.shape = state.activeShapes[Math.floor(Math.random() * state.activeShapes.length)];
-                    }
-                    if (Math.random() < motion * 1.8) cell.colorIdx = Math.floor(Math.random() * pal.length);
+                let lum = Math.max(0, 1 - dist * 2.2);
+                lum += fbm(col*0.1 + t*0.3, row*0.1, 3) * 0.3 - 0.1;
+                if (lum < 0.25) continue;
+                const cxp = col*cs + cs*0.5;
+                const cyp = row*cs + cs*0.5;
+                ctx.globalAlpha = Math.min(1, lum);
+                if (lum > 0.7) {
+                    const s = cs * 0.6;
+                    ctx.fillRect(cxp - s*0.5, cyp - s*0.5, s, s);
+                } else {
+                    // Morse dot / dash
+                    const isDash = (col + row + Math.floor(t*3)) % 3 === 0;
+                    const w2 = isDash ? cs*0.55 : cs*0.18;
+                    const h2 = cs*0.2;
+                    ctx.fillRect(cxp - w2*0.5, cyp - h2*0.5, w2, h2);
                 }
-
-                cell.energy += (cell.targetEnergy - cell.energy) * state.reactivity;
-                if (cell.energy < 0.03) continue;
-
-                const pulse = 1 + Math.sin(timeT * 1.2 + cell.phase) * 0.1 * cell.energy;
-                const drawSize = cs * cell.baseSize * pulse;
-                const alpha = Math.min(1, cell.energy * 1.3);
-
-                let color;
-                if (state.colorMode === 'mono') color = state.tintColor;
-                else if (state.colorMode === 'source') color = `rgb(${r|0},${g|0},${b|0})`;
-                else color = pal[cell.colorIdx % pal.length];
-
-                drawShape(outCtx, x + (cs - drawSize)/2, y + (cs - drawSize)/2, drawSize, cell.shape, color, alpha);
-            } else {
-                if (lum < state.threshold) {
-                    const savedBlur = outCtx.shadowBlur;
-                    outCtx.shadowBlur = 0;
-                    outCtx.fillStyle = `rgba(${tintRGB[0]},${tintRGB[1]},${tintRGB[2]},0.06)`;
-                    const ds = Math.max(1, cs * 0.08);
-                    outCtx.fillRect(cx - ds*0.5, cy - ds*0.5, ds, ds);
-                    outCtx.shadowBlur = savedBlur;
-                    continue;
-                }
-                let cr, cg, cb;
-                if (state.colorMode === 'mono') { cr = tintRGB[0]; cg = tintRGB[1]; cb = tintRGB[2]; }
-                else if (state.colorMode === 'source') { cr = Math.min(255, r*1.2); cg = Math.min(255, g*1.2); cb = Math.min(255, b*1.2); }
-                else {
-                    const palColor = pal[cell.colorIdx % pal.length];
-                    [cr, cg, cb] = hexToRGB(palColor);
-                }
-                if (state.mode === 'morse') drawMorseInCell(outCtx, cx, cy, cs, lum, cr, cg, cb, i);
-                else drawCharInCell(outCtx, cx, cy, cs, lum, cr, cg, cb, state.mode);
             }
         }
+        ctx.globalAlpha = 1;
+        requestAnimationFrame(draw);
     }
-
-    prevFrameData = new Uint8ClampedArray(data);
-    outCtx.shadowBlur = 0;
-
-    if (state.scanlines > 0) {
-        outCtx.fillStyle = `rgba(0,0,0,${state.scanlines * 0.3})`;
-        for (let y = 0; y < vh; y += 2) outCtx.fillRect(0, y, vw, 1);
-    }
-}
-
-function drawShape(ctx, x, y, s, shape, color, alpha) {
-    ctx.globalAlpha = alpha;
-    ctx.fillStyle = color; ctx.strokeStyle = color;
-    ctx.lineWidth = Math.max(1, s * 0.14);
-    const half = s / 2;
-    switch (shape) {
-        case 'circle': ctx.beginPath(); ctx.arc(x+half, y+half, half*0.85, 0, Math.PI*2); ctx.fill(); break;
-        case 'ring': ctx.beginPath(); ctx.arc(x+half, y+half, half*0.75, 0, Math.PI*2); ctx.stroke(); break;
-        case 'cross': {
-            const arm = s*0.12, ext = half*0.8;
-            ctx.fillRect(x+half-arm, y+half-ext, arm*2, ext*2);
-            ctx.fillRect(x+half-ext, y+half-arm, ext*2, arm*2); break;
-        }
-        case 'rect': ctx.fillRect(x+s*0.12, y+s*0.12, s*0.76, s*0.76); break;
-        case 'dot': ctx.beginPath(); ctx.arc(x+half, y+half, half*0.3, 0, Math.PI*2); ctx.fill(); break;
-        case 'dash': ctx.fillRect(x+s*0.1, y+half-s*0.08, s*0.8, s*0.16); break;
-        case 'diamond':
-            ctx.beginPath();
-            ctx.moveTo(x+half, y+s*0.1); ctx.lineTo(x+s*0.9, y+half);
-            ctx.lineTo(x+half, y+s*0.9); ctx.lineTo(x+s*0.1, y+half);
-            ctx.closePath(); ctx.fill(); break;
-    }
-    ctx.globalAlpha = 1;
-}
-
-function drawMorseInCell(ctx, cx, cy, size, lum, r, g, b, cellIdx) {
-    const morseStr = cellMorseCache[cellIdx % cellMorseCache.length];
-    if (!morseStr) return;
-    ctx.fillStyle = `rgba(${Math.round(r)},${Math.round(g)},${Math.round(b)},${lum.toFixed(3)})`;
-    const elements = morseStr.split('');
-    if (lum > 0.8) { const s = size * (0.5 + lum * 0.4); ctx.fillRect(cx - s*0.5, cy - s*0.5, s, s); return; }
-    if (lum > 0.25) {
-        const unitW = size * 0.1, dotW = unitW, dashW = unitW * 3, gap = unitW * 0.8, h = unitW * 1.8;
-        let totalW = 0;
-        for (const e of elements) totalW += (e === '.') ? dotW : dashW;
-        totalW += (elements.length - 1) * gap;
-        const fitScale = Math.min(1, (size * 0.85) / Math.max(totalW, 1));
-        let drawX = cx - totalW * fitScale * 0.5;
-        for (const e of elements) {
-            const w = ((e === '.') ? dotW : dashW) * fitScale;
-            ctx.fillRect(drawX, cy - h*fitScale*0.5, w, h*fitScale);
-            drawX += w + gap * fitScale;
-        }
-        return;
-    }
-    const s = size * (0.08 + lum * 0.5);
-    ctx.fillRect(cx - s*0.5, cy - s*0.5, s, s);
-}
-
-function drawCharInCell(ctx, cx, cy, size, lum, r, g, b, mode) {
-    const chars = CHARSETS[mode];
-    if (!chars) return;
-    const idx = Math.min(chars.length - 1, Math.floor(lum * (chars.length - 1)));
-    const ch = chars[idx];
-    if (ch === ' ') return;
-    ctx.fillStyle = `rgba(${Math.round(r)},${Math.round(g)},${Math.round(b)},${lum.toFixed(3)})`;
-    ctx.font = `${Math.floor(size * 0.9)}px "IBM Plex Mono", monospace`;
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText(ch, cx, cy);
-}
-
-function exportFrame() {
-    const link = document.createElement('a');
-    link.download = `signal-cartography-${state.mode}-${Date.now()}.png`;
-    link.href = outCanvas.toDataURL('image/png');
-    link.click();
-}
-
-function toggleRecord() { if (isRecording) stopRecording(); else startRecording(); }
-function startRecording() {
-    recordedChunks = [];
-    let stream = outCanvas.captureStream(30);
-    if (!isMuted && video.captureStream) {
-        try {
-            const audioStream = video.captureStream();
-            audioStream.getAudioTracks().forEach(t => stream.addTrack(t));
-        } catch(e) {}
-    }
-    try {
-        mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm;codecs=vp9', videoBitsPerSecond: 8000000 });
-    } catch(e) { mediaRecorder = new MediaRecorder(stream); }
-    mediaRecorder.ondataavailable = e => { if (e.data.size > 0) recordedChunks.push(e.data); };
-    mediaRecorder.onstop = () => {
-        const blob = new Blob(recordedChunks, { type: 'video/webm' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.download = `signal-cartography-${state.mode}.webm`;
-        link.href = url; link.click();
-    };
-    mediaRecorder.start();
-    isRecording = true;
-    const btn = document.getElementById('recordBtn');
-    btn.textContent = 'Stop'; btn.classList.add('primary');
-    document.getElementById('recIndicator').classList.remove('hidden');
-    video.currentTime = 0;
-    if (!isPlaying) { video.play(); isPlaying = true; renderLoop(); }
-}
-function stopRecording() {
-    if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
-    isRecording = false;
-    const btn = document.getElementById('recordBtn');
-    btn.textContent = 'Record'; btn.classList.remove('primary');
-    document.getElementById('recIndicator').classList.add('hidden');
-}
-
-buildPresets();
-buildModes();
-buildShapes();
-buildPalettes();
-wireControls();
-applyPreset(PRESETS[0]);
+    setTimeout(() => { resize(); draw(); }, 50);
+})();
 </script>
 </body>
 </html>
