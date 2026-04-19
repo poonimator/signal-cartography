@@ -1,159 +1,262 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="night">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pattern Studio · Signal Cartography</title>
+    <title>Pattern Studio · Aura</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&family=Lora:wght@400;500&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=DM+Mono:wght@300;400;500&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #0a0a0c;
-            --surface: #111114;
-            --surface2: #1a1a1f;
-            --border: #2a2a30;
-            --border-strong: #3a3a42;
-            --text: #e8e6dc;
-            --text-dim: #6a6a70;
+            --ease: cubic-bezier(0.4, 0, 0.2, 1);
+            --font-sans: 'DM Sans', system-ui, sans-serif;
+            --font-mono: 'DM Mono', monospace;
+            --font-serif: 'Instrument Serif', serif;
+        }
+        html[data-theme="day"] {
+            --bg: #f5f5f0;
+            --bg-card: #eaeae5;
+            --text: #1a1a1a;
+            --text-body: rgba(26,26,26,0.65);
+            --text-muted: rgba(26,26,26,0.4);
+            --text-dim: rgba(26,26,26,0.25);
+            --border: rgba(0,0,0,0.08);
+            --border-strong: rgba(0,0,0,0.14);
             --accent: #E8421A;
-            --accent-hover: #c8351a;
+            --canvas-bg: #eaeae5;
+        }
+        html[data-theme="night"] {
+            --bg: #131719;
+            --bg-card: #1a1d20;
+            --text: #ededed;
+            --text-body: rgba(237,237,237,0.65);
+            --text-muted: rgba(237,237,237,0.4);
+            --text-dim: rgba(237,237,237,0.25);
+            --border: rgba(255,255,255,0.08);
+            --border-strong: rgba(255,255,255,0.14);
+            --accent: #E8421A;
+            --canvas-bg: #0a0c0e;
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: 'Poppins', sans-serif;
+        html, body {
             background: var(--bg); color: var(--text);
+            font-family: var(--font-sans); font-size: 14px;
             min-height: 100vh; overflow: hidden;
+            transition: background 0.4s var(--ease), color 0.4s var(--ease);
+            -webkit-font-smoothing: antialiased;
         }
         .app { display: flex; height: 100vh; }
         .sidebar {
-            width: 320px; flex-shrink: 0;
-            background: var(--surface);
-            border-right: 1px solid var(--border);
+            width: 300px; flex-shrink: 0;
+            background: var(--bg); border-right: 1px solid var(--border);
             padding: 20px; overflow-y: auto;
             display: flex; flex-direction: column;
+            scrollbar-width: thin;
+        }
+        .topbar {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 20px;
         }
         .back {
             display: inline-flex; align-items: center; gap: 6px;
-            font-family: 'IBM Plex Mono', monospace; font-size: 11px;
-            color: var(--text-dim); text-decoration: none;
-            letter-spacing: 1px; margin-bottom: 20px;
-            text-transform: uppercase;
+            font-family: var(--font-mono); font-size: 11px;
+            color: var(--text-muted); text-decoration: none;
+            letter-spacing: 1px; text-transform: uppercase;
         }
-        .back:hover { color: var(--accent); }
-        .sidebar h1 { font-family: 'Lora', serif; font-size: 22px; font-weight: 500; margin-bottom: 2px; }
-        .sidebar .subtitle { color: var(--text-dim); font-size: 12px; margin-bottom: 20px; line-height: 1.4; }
-        .section { margin-bottom: 22px; }
+        .back:hover { color: var(--text); }
+        .theme-toggle {
+            background: transparent; border: 1px solid var(--border-strong);
+            border-radius: 3px; padding: 4px 10px; cursor: pointer;
+            font-family: var(--font-mono); font-size: 11px;
+            color: var(--text-body); letter-spacing: 1px;
+            text-transform: uppercase; transition: all 0.2s var(--ease);
+        }
+        .theme-toggle:hover { color: var(--text); border-color: var(--text); }
+
+        .sidebar h1 {
+            font-family: var(--font-serif); font-weight: 400;
+            font-size: 28px; line-height: 1.1; letter-spacing: -0.5px;
+            color: var(--text); margin-bottom: 4px;
+        }
+        .subtitle {
+            font-family: var(--font-sans); font-size: 12px;
+            color: var(--text-body); line-height: 1.5;
+            margin-bottom: 24px;
+        }
+
+        .label {
+            font-family: var(--font-mono); font-size: 10px; font-weight: 400;
+            letter-spacing: 1px; text-transform: uppercase;
+            color: var(--text-muted);
+        }
+        .section { margin-bottom: 20px; }
         .section-title {
-            font-size: 10px; font-weight: 600; text-transform: uppercase;
-            letter-spacing: 1.5px; color: var(--text-dim); margin-bottom: 10px;
+            font-family: var(--font-mono); font-size: 10px;
+            letter-spacing: 1px; text-transform: uppercase;
+            color: var(--text-muted); margin-bottom: 10px;
         }
-        .control { margin-bottom: 12px; }
+
+        .control { margin-bottom: 10px; }
         .control label {
             display: flex; justify-content: space-between; align-items: center;
-            font-size: 12px; color: var(--text); margin-bottom: 5px;
+            font-family: var(--font-mono); font-size: 11px;
+            color: var(--text-body); margin-bottom: 4px;
+            letter-spacing: 0.5px;
         }
-        .control .val { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--text-dim); }
+        .val { color: var(--text); font-weight: 500; }
+
         input[type="range"] {
-            width: 100%; height: 3px; background: var(--border);
-            border-radius: 2px; outline: none; -webkit-appearance: none;
+            width: 100%; height: 2px; background: var(--border-strong);
+            border-radius: 1px; outline: none; -webkit-appearance: none;
+            appearance: none;
         }
         input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none; width: 13px; height: 13px;
-            background: var(--accent); border-radius: 50%; cursor: pointer;
+            -webkit-appearance: none; width: 10px; height: 10px;
+            background: var(--text); border-radius: 50%; cursor: pointer;
+            transition: transform 0.15s;
         }
+        input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.3); }
         input[type="range"]::-moz-range-thumb {
-            width: 13px; height: 13px; background: var(--accent);
+            width: 10px; height: 10px; background: var(--text);
             border-radius: 50%; border: none; cursor: pointer;
         }
+
         .btn {
-            background: var(--surface2); color: var(--text);
-            border: 1px solid var(--border); padding: 7px 12px;
-            border-radius: 5px; font-size: 11px; font-weight: 500;
-            cursor: pointer; transition: all 0.15s;
-            font-family: 'Poppins', sans-serif;
+            background: transparent; color: var(--text-body);
+            border: 1px solid var(--border-strong); padding: 5px 10px;
+            border-radius: 3px; font-family: var(--font-mono);
+            font-size: 11px; letter-spacing: 0.5px;
+            cursor: pointer; transition: all 0.15s var(--ease);
         }
-        .btn:hover { background: var(--border); border-color: var(--border-strong); }
-        .btn.primary { background: var(--accent); border-color: var(--accent); color: white; }
-        .btn.primary:hover { background: var(--accent-hover); }
-        .btn.active { background: rgba(232,66,26,0.15); border-color: var(--accent); color: var(--accent); }
-        .btn-row { display: flex; gap: 5px; flex-wrap: wrap; }
+        .btn:hover { color: var(--text); border-color: var(--text); }
+        .btn.active {
+            color: var(--text); border-color: var(--text);
+            background: rgba(128,128,128,0.08);
+        }
+        .btn.primary {
+            background: var(--text); color: var(--bg);
+            border-color: var(--text);
+        }
+        .btn.primary:hover {
+            background: var(--text); color: var(--bg);
+            opacity: 0.85;
+        }
+        .btn-row { display: flex; gap: 6px; flex-wrap: wrap; }
         .btn-row .btn { flex: 1; min-width: 0; text-align: center; }
 
         .seed-row { display: flex; gap: 6px; align-items: center; margin-bottom: 8px; }
         .seed-input {
-            flex: 1; background: var(--surface2); color: var(--text);
-            border: 1px solid var(--border); padding: 7px 10px;
-            border-radius: 5px; font-family: 'IBM Plex Mono', monospace;
+            flex: 1; background: transparent; color: var(--text);
+            border: 1px solid var(--border-strong); padding: 5px 10px;
+            border-radius: 3px; font-family: var(--font-mono);
             font-size: 12px; text-align: center; outline: none;
+            transition: border-color 0.15s;
         }
-        .seed-input:focus { border-color: var(--accent); }
+        .seed-input:focus { border-color: var(--text); }
 
         input[type="color"] {
-            width: 26px; height: 26px; border: none;
-            border-radius: 4px; cursor: pointer; background: none; padding: 0;
+            width: 24px; height: 24px; border: none;
+            border-radius: 3px; cursor: pointer; background: none; padding: 0;
         }
         .color-row { display: flex; align-items: center; gap: 8px; }
-        .color-hex { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--text-dim); }
+        .color-hex {
+            font-family: var(--font-mono); font-size: 11px;
+            color: var(--text-body); letter-spacing: 0.5px;
+        }
 
-        .palette-list { display: flex; flex-direction: column; gap: 4px; }
+        /* Palette selector — swatches only */
+        .palette-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 5px;
+        }
         .palette-btn {
-            display: flex; align-items: center; gap: 10px;
-            padding: 6px 8px; border-radius: 5px; cursor: pointer;
-            border: 1px solid var(--border); background: var(--surface2);
-            transition: all 0.15s;
+            padding: 6px 8px; cursor: pointer;
+            border: 1px solid var(--border-strong); border-radius: 3px;
+            background: transparent; transition: all 0.15s var(--ease);
+            display: flex; flex-direction: column; gap: 4px;
         }
-        .palette-btn:hover { border-color: var(--border-strong); }
-        .palette-btn.active { border-color: var(--accent); background: rgba(232,66,26,0.08); }
-        .palette-btn .swatches { display: flex; gap: 2px; flex-shrink: 0; }
-        .palette-btn .swatch { width: 10px; height: 10px; border-radius: 2px; }
-        .palette-btn .pal-name { font-size: 11px; }
+        .palette-btn:hover { border-color: var(--text); }
+        .palette-btn.active { border-color: var(--text); background: rgba(128,128,128,0.08); }
+        .palette-btn .swatches { display: flex; gap: 2px; }
+        .palette-btn .swatch { width: 10px; height: 10px; border-radius: 2px; flex: 1; }
+        .palette-btn .pal-name {
+            font-family: var(--font-mono); font-size: 10px;
+            color: var(--text-body); letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+        .palette-btn.active .pal-name { color: var(--text); }
 
-        .shapes-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
+        /* Shape selector — visual icons */
+        .shapes-grid {
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px;
+        }
         .shape-btn {
-            padding: 6px 2px; font-size: 10px;
-            background: var(--surface2); color: var(--text);
-            border: 1px solid var(--border); border-radius: 4px;
-            cursor: pointer; transition: all 0.15s; text-align: center;
+            aspect-ratio: 1; padding: 6px;
+            border: 1px solid var(--border-strong); border-radius: 3px;
+            background: transparent; cursor: pointer;
+            transition: all 0.15s var(--ease);
+            display: flex; align-items: center; justify-content: center;
         }
-        .shape-btn:hover { border-color: var(--border-strong); }
-        .shape-btn.active { border-color: var(--accent); background: rgba(232,66,26,0.1); color: var(--accent); }
+        .shape-btn:hover { border-color: var(--text); }
+        .shape-btn.active { border-color: var(--text); background: rgba(128,128,128,0.08); }
+        .shape-btn svg { width: 60%; height: 60%; }
+        .shape-btn svg * { fill: var(--text-muted); stroke: var(--text-muted); transition: all 0.15s; }
+        .shape-btn.active svg * { fill: var(--text); stroke: var(--text); }
 
-        .preset-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+        /* Preset buttons */
+        .preset-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
         .preset-btn {
-            padding: 8px 6px; font-size: 10px; font-weight: 500;
-            background: var(--surface2); color: var(--text);
-            border: 1px solid var(--border); border-radius: 5px;
-            cursor: pointer; transition: all 0.15s;
-            text-align: center; line-height: 1.3;
+            padding: 7px 8px; text-align: left; cursor: pointer;
+            border: 1px solid var(--border-strong); border-radius: 3px;
+            background: transparent; transition: all 0.15s var(--ease);
         }
-        .preset-btn:hover { border-color: var(--border-strong); }
-        .preset-btn.active { border-color: var(--accent); background: rgba(232,66,26,0.1); color: var(--accent); }
-        .preset-btn .title { font-weight: 600; display: block; margin-bottom: 2px; }
-        .preset-btn .desc { font-size: 9px; color: var(--text-dim); display: block; }
-        .preset-btn.active .desc { color: rgba(232,66,26,0.7); }
+        .preset-btn:hover { border-color: var(--text); }
+        .preset-btn.active { border-color: var(--text); background: rgba(128,128,128,0.08); }
+        .preset-btn .title {
+            font-family: var(--font-mono); font-size: 11px;
+            color: var(--text); letter-spacing: 0.5px;
+            text-transform: uppercase; display: block; margin-bottom: 2px;
+        }
+        .preset-btn .desc {
+            font-family: var(--font-mono); font-size: 9px;
+            color: var(--text-muted); letter-spacing: 0.3px;
+            display: block;
+        }
 
-        .toggle-row { display: flex; gap: 6px; align-items: center; font-size: 12px; }
-        .toggle-row input[type="checkbox"] { cursor: pointer; accent-color: var(--accent); }
+        .toggle-row {
+            display: flex; gap: 8px; align-items: center;
+            font-family: var(--font-mono); font-size: 11px;
+            color: var(--text-body); letter-spacing: 0.5px;
+            cursor: pointer;
+        }
+        .toggle-row input[type="checkbox"] {
+            cursor: pointer; accent-color: var(--text);
+            width: 12px; height: 12px;
+        }
 
+        /* Canvas area */
         .canvas-area {
             flex: 1; display: flex; align-items: center; justify-content: center;
-            background: var(--bg); padding: 20px; position: relative;
+            background: var(--bg-card); position: relative;
+            transition: background 0.4s var(--ease);
         }
         #output {
             max-width: 100%; max-height: 94vh;
-            border-radius: 4px; cursor: crosshair;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            cursor: crosshair;
         }
-
         .status {
             position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%);
-            font-family: 'IBM Plex Mono', monospace; font-size: 10px;
-            letter-spacing: 1px; color: var(--text-dim);
-            background: rgba(17,17,20,0.85); backdrop-filter: blur(10px);
-            padding: 6px 14px; border-radius: 4px; border: 1px solid var(--border);
+            font-family: var(--font-mono); font-size: 10px;
+            letter-spacing: 1px; color: var(--text-muted);
+            background: var(--bg); backdrop-filter: blur(10px);
+            padding: 5px 12px; border-radius: 3px; border: 1px solid var(--border);
             text-transform: uppercase;
         }
+
+        /* Scrollbar */
+        .sidebar::-webkit-scrollbar { width: 4px; }
+        .sidebar::-webkit-scrollbar-track { background: transparent; }
+        .sidebar::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 2px; }
 
         @media (max-width: 900px) {
             .app { flex-direction: column; }
@@ -164,7 +267,11 @@
 <body>
 <div class="app">
     <div class="sidebar">
-        <a href="/" class="back">&larr; Signal Cartography</a>
+        <div class="topbar">
+            <a href="/" class="back">← Aura</a>
+            <button class="theme-toggle" onclick="toggleTheme()" id="theme-btn">Day</button>
+        </div>
+
         <h1>Pattern Studio</h1>
         <div class="subtitle">Noise-driven aura grid. Reproducible through seeds. Living when animated, stilled for export.</div>
 
@@ -177,10 +284,10 @@
             <div class="section-title">Seed</div>
             <div class="seed-row">
                 <input type="number" class="seed-input" id="seed" value="42">
-                <button class="btn" onclick="prevSeed()">&larr;</button>
-                <button class="btn" onclick="nextSeed()">&rarr;</button>
+                <button class="btn" onclick="prevSeed()">←</button>
+                <button class="btn" onclick="nextSeed()">→</button>
             </div>
-            <button class="btn" style="width:100%" onclick="randomSeed()">&#8635; Random Seed</button>
+            <button class="btn" style="width:100%" onclick="randomSeed()">↻ Random</button>
         </div>
 
         <div class="section">
@@ -190,19 +297,17 @@
 
         <div class="section">
             <div class="section-title">Palette</div>
-            <div class="palette-list" id="palette-list"></div>
+            <div class="palette-grid" id="palette-list"></div>
         </div>
 
         <div class="section">
             <div class="section-title">Field</div>
-            <div class="control"><label>Cell Size <span class="val" id="cellSize-val">12</span></label>
-                <input type="range" id="cellSize" min="4" max="40" step="1" value="12"></div>
+            <div class="control"><label>Cell Size <span class="val" id="cellSize-val">14</span></label>
+                <input type="range" id="cellSize" min="4" max="40" step="1" value="14"></div>
             <div class="control"><label>Sparsity <span class="val" id="sparsity-val">0.40</span></label>
                 <input type="range" id="sparsity" min="0.0" max="0.7" step="0.02" value="0.40"></div>
             <div class="control"><label>Noise Scale <span class="val" id="noiseScale-val">0.04</span></label>
                 <input type="range" id="noiseScale" min="0.01" max="0.15" step="0.005" value="0.04"></div>
-            <div class="control"><label>Octaves <span class="val" id="octaves-val">4</span></label>
-                <input type="range" id="octaves" min="1" max="6" step="1" value="4"></div>
             <div class="control"><label>Flow Speed <span class="val" id="flowSpeed-val">0.15</span></label>
                 <input type="range" id="flowSpeed" min="0.0" max="0.5" step="0.01" value="0.15"></div>
         </div>
@@ -213,18 +318,16 @@
                 <input type="range" id="shapeScale" min="0.3" max="1.3" step="0.05" value="0.9"></div>
             <div class="control"><label>Pulse <span class="val" id="pulse-val">0.15</span></label>
                 <input type="range" id="pulse" min="0.0" max="0.5" step="0.02" value="0.15"></div>
-            <div class="control"><label>Glow <span class="val" id="glow-val">0</span></label>
-                <input type="range" id="glow" min="0" max="12" step="1" value="0"></div>
             <div class="control"><label>Background</label>
-                <div class="color-row"><input type="color" id="bgColor" value="#0a0a0c">
-                    <span class="color-hex" id="bgColor-hex">#0a0a0c</span></div></div>
+                <div class="color-row"><input type="color" id="bgColor" value="#0a0c0e">
+                    <span class="color-hex" id="bgColor-hex">#0a0c0e</span></div></div>
             <div class="toggle-row" style="margin-top:10px">
                 <input type="checkbox" id="mouseReactive" checked>
-                <label for="mouseReactive">Mouse reactivity</label>
+                <label for="mouseReactive">Mouse reactive</label>
             </div>
             <div class="toggle-row" style="margin-top:6px">
                 <input type="checkbox" id="animated" checked>
-                <label for="animated">Animated (unchecked = still)</label>
+                <label for="animated">Animated</label>
             </div>
         </div>
 
@@ -236,14 +339,12 @@
             </div>
             <div class="btn-row" style="margin-top:8px">
                 <button class="btn primary" onclick="exportFrame()">Screenshot</button>
-                <button class="btn" id="recordBtn" onclick="toggleRecord()">Record 5s Loop</button>
+                <button class="btn" id="recordBtn" onclick="toggleRecord()">Record 5s</button>
             </div>
         </div>
 
         <div style="flex:1; min-height:16px"></div>
-        <div class="btn-row">
-            <button class="btn" onclick="resetAll()">Reset</button>
-        </div>
+        <button class="btn" style="width:100%" onclick="resetAll()">Reset</button>
     </div>
 
     <div class="canvas-area">
@@ -253,6 +354,7 @@
 </div>
 
 <script>
+// ═══ PALETTES ═══
 const PALETTES = [
     { id: 'brand', label: 'Brand', colors: ['#E8421A','#F07820','#F5B810','#F2A08A','#8AAEE0','#D4C020','#7A9040','#FFFFFF'] },
     { id: 'warm', label: 'Warm', colors: ['#E8421A','#F07820','#F5B810','#E37128'] },
@@ -263,63 +365,79 @@ const PALETTES = [
     { id: 'ocean', label: 'Ocean', colors: ['#0A2E4A','#1A5276','#2E86C1','#85C1E9','#D6EAF8','#FFFFFF'] },
     { id: 'ember', label: 'Ember', colors: ['#3A0A0A','#8B1A1A','#E8421A','#F07820','#F5B810','#FFE0A0'] },
     { id: 'mineral', label: 'Mineral', colors: ['#2C2C3A','#4A4A6A','#8A8AB0','#C0C0D8','#E8E8F0','#FFFFFF'] },
-    { id: 'mono-light', label: 'Mono Light', colors: ['#FFFFFF'] },
-    { id: 'mono-gold', label: 'Mono Gold', colors: ['#F5B810'] },
+    { id: 'mono-light', label: 'Mono', colors: ['#FFFFFF'] },
+    { id: 'mono-gold', label: 'Gold', colors: ['#F5B810'] },
+    { id: 'mono-dark', label: 'Dark', colors: ['#1a1a1a'] },
 ];
-const SHAPES = ['circle','cross','rect','dot','ring','dash','diamond'];
 
+// ═══ SHAPES (with SVG icons) ═══
+const SHAPES = [
+    { id: 'circle', svg: '<circle cx="12" cy="12" r="9" />' },
+    { id: 'ring', svg: '<circle cx="12" cy="12" r="8" fill="none" stroke-width="3" />' },
+    { id: 'cross', svg: '<rect x="10" y="3" width="4" height="18" /><rect x="3" y="10" width="18" height="4" />' },
+    { id: 'rect', svg: '<rect x="4" y="4" width="16" height="16" />' },
+    { id: 'dot', svg: '<circle cx="12" cy="12" r="3.5" />' },
+    { id: 'dash', svg: '<rect x="3" y="10" width="18" height="4" />' },
+    { id: 'diamond', svg: '<polygon points="12,3 21,12 12,21 3,12" />' },
+];
+const SHAPE_IDS = SHAPES.map(s => s.id);
+
+// ═══ PRESETS ═══
 const PRESETS = [
     { id: 'aura-brand', title: 'Aura', desc: 'Brand grid',
-      config: { palette: 'brand', activeShapes: ['circle','cross','rect','dot','ring','dash','diamond'],
-                cellSize: 12, sparsity: 0.40, noiseScale: 0.04, octaves: 4, flowSpeed: 0.15,
-                shapeScale: 0.9, pulse: 0.15, glow: 0, bgColor: '#0a0a0c', seed: 42 } },
-    { id: 'mudigere', title: 'Mudigere', desc: 'Earth dense',
+      config: { palette: 'brand', activeShapes: SHAPE_IDS.slice(),
+                cellSize: 14, sparsity: 0.40, noiseScale: 0.04, flowSpeed: 0.15,
+                shapeScale: 0.9, pulse: 0.15, bgColor: null, seed: 42 } },
+    { id: 'mudigere', title: 'Mudigere', desc: 'Earth tones',
       config: { palette: 'earth', activeShapes: ['circle','dot','ring','diamond'],
-                cellSize: 10, sparsity: 0.30, noiseScale: 0.05, octaves: 4, flowSpeed: 0.12,
-                shapeScale: 0.85, pulse: 0.12, glow: 0, bgColor: '#14100c', seed: 7 } },
-    { id: 'ember', title: 'Ember', desc: 'Fire, soft glow',
+                cellSize: 12, sparsity: 0.30, noiseScale: 0.05, flowSpeed: 0.12,
+                shapeScale: 0.85, pulse: 0.12, bgColor: null, seed: 7 } },
+    { id: 'ember', title: 'Ember', desc: 'Fire',
       config: { palette: 'ember', activeShapes: ['circle','cross','dot','diamond'],
-                cellSize: 14, sparsity: 0.38, noiseScale: 0.035, octaves: 4, flowSpeed: 0.18,
-                shapeScale: 0.95, pulse: 0.25, glow: 4, bgColor: '#0a0505', seed: 99 } },
-    { id: 'ocean', title: 'Ocean', desc: 'Cool clusters',
+                cellSize: 16, sparsity: 0.38, noiseScale: 0.035, flowSpeed: 0.18,
+                shapeScale: 0.95, pulse: 0.25, bgColor: null, seed: 99 } },
+    { id: 'ocean', title: 'Ocean', desc: 'Cool',
       config: { palette: 'ocean', activeShapes: ['dot','ring','circle'],
-                cellSize: 10, sparsity: 0.42, noiseScale: 0.04, octaves: 5, flowSpeed: 0.1,
-                shapeScale: 0.9, pulse: 0.1, glow: 2, bgColor: '#02121f', seed: 23 } },
-    { id: 'dusk', title: 'Dusk', desc: 'Soft pastels',
+                cellSize: 12, sparsity: 0.42, noiseScale: 0.04, flowSpeed: 0.1,
+                shapeScale: 0.9, pulse: 0.1, bgColor: null, seed: 23 } },
+    { id: 'dusk', title: 'Dusk', desc: 'Soft',
       config: { palette: 'dusk', activeShapes: ['circle','ring','dot'],
-                cellSize: 12, sparsity: 0.38, noiseScale: 0.03, octaves: 4, flowSpeed: 0.08,
-                shapeScale: 1.0, pulse: 0.2, glow: 3, bgColor: '#120a18', seed: 55 } },
-    { id: 'flora', title: 'Flora', desc: 'Growing field',
+                cellSize: 14, sparsity: 0.38, noiseScale: 0.03, flowSpeed: 0.08,
+                shapeScale: 1.0, pulse: 0.2, bgColor: null, seed: 55 } },
+    { id: 'flora', title: 'Flora', desc: 'Growth',
       config: { palette: 'flora', activeShapes: ['diamond','dot','ring','cross'],
-                cellSize: 10, sparsity: 0.36, noiseScale: 0.06, octaves: 5, flowSpeed: 0.13,
-                shapeScale: 0.8, pulse: 0.15, glow: 1, bgColor: '#0a0e05', seed: 13 } },
-    { id: 'mineral', title: 'Mineral', desc: 'Cold blocks',
+                cellSize: 12, sparsity: 0.36, noiseScale: 0.06, flowSpeed: 0.13,
+                shapeScale: 0.8, pulse: 0.15, bgColor: null, seed: 13 } },
+    { id: 'mineral', title: 'Mineral', desc: 'Cold',
       config: { palette: 'mineral', activeShapes: ['rect','cross','dash'],
-                cellSize: 14, sparsity: 0.42, noiseScale: 0.035, octaves: 3, flowSpeed: 0.06,
-                shapeScale: 0.85, pulse: 0.05, glow: 0, bgColor: '#0a0a10', seed: 11 } },
-    { id: 'constellation', title: 'Constellation', desc: 'Sparse stars',
+                cellSize: 16, sparsity: 0.42, noiseScale: 0.035, flowSpeed: 0.06,
+                shapeScale: 0.85, pulse: 0.05, bgColor: null, seed: 11 } },
+    { id: 'constellation', title: 'Stars', desc: 'Sparse',
       config: { palette: 'mono-light', activeShapes: ['dot','ring','cross'],
-                cellSize: 16, sparsity: 0.58, noiseScale: 0.03, octaves: 3, flowSpeed: 0.05,
-                shapeScale: 0.7, pulse: 0.3, glow: 6, bgColor: '#05060a', seed: 777 } },
+                cellSize: 20, sparsity: 0.58, noiseScale: 0.03, flowSpeed: 0.05,
+                shapeScale: 0.7, pulse: 0.3, bgColor: '#05060a', seed: 777 } },
 ];
 
 let state = {
     palette: 'brand',
-    activeShapes: ['circle','cross','rect','dot','ring','dash','diamond'],
-    cellSize: 12, sparsity: 0.40, noiseScale: 0.04, octaves: 4, flowSpeed: 0.15,
-    shapeScale: 0.9, pulse: 0.15, glow: 0, bgColor: '#0a0a0c',
+    activeShapes: SHAPE_IDS.slice(),
+    cellSize: 14, sparsity: 0.40, noiseScale: 0.04, flowSpeed: 0.15,
+    shapeScale: 0.9, pulse: 0.15, bgColor: null,
     seed: 42, mouseReactive: true, animated: true,
+    theme: localStorage.getItem('aura-theme') || 'night',
 };
 
 const canvas = document.getElementById('output');
-const ctx = canvas.getContext('2d');
-let W = 1200, H = 1200;
+const ctx = canvas.getContext('2d', { alpha: false });
+let W = 0, H = 0;
 let cells = [];
 let gridCols = 0, gridRows = 0;
 let timeT = 0;
 let mousePos = { x: -1, y: -1 };
 let animFrame;
-let dirty = true;
+let lastFrameTime = 0;
+const TARGET_FPS = 30;
+const FRAME_INTERVAL = 1000 / TARGET_FPS;
 
 // Seeded RNG
 function mulberry32(a) {
@@ -331,7 +449,7 @@ function mulberry32(a) {
     };
 }
 
-// Seeded noise hash
+// ═══ FAST NOISE (2-octave, seeded) — much cheaper than 5-octave fbm ═══
 let seedOffset = 0;
 function hashN(x, y) {
     let h = (x + seedOffset) * 374761393 + (y + seedOffset * 7) * 668265263;
@@ -346,17 +464,31 @@ function noise2D(x, y) {
     const c = hashN(ix, iy+1), d = hashN(ix+1, iy+1);
     return a + (b-a)*fx + (c-a)*fy + (a-b-c+d)*fx*fy;
 }
-function fbm(x, y, octaves) {
-    let val = 0, amp = 0.5, freq = 1;
-    for (let i = 0; i < octaves; i++) { val += amp * noise2D(x*freq, y*freq); amp *= 0.5; freq *= 2; }
-    return val;
+// 2-octave fbm — fast enough for live animation
+function fbm2(x, y) {
+    return 0.5 * noise2D(x, y) + 0.25 * noise2D(x*2, y*2);
 }
 
 function getPaletteColors() {
     return (PALETTES.find(p => p.id === state.palette) || PALETTES[0]).colors;
 }
 
-// UI builders
+function getBg() {
+    if (state.bgColor) return state.bgColor;
+    return getComputedStyle(document.documentElement).getPropertyValue('--canvas-bg').trim() || '#0a0c0e';
+}
+
+// ═══ THEME ═══
+function applyTheme(t) {
+    state.theme = t;
+    document.documentElement.setAttribute('data-theme', t);
+    document.getElementById('theme-btn').textContent = t === 'night' ? 'Day' : 'Night';
+    localStorage.setItem('aura-theme', t);
+    dirty = true;
+}
+function toggleTheme() { applyTheme(state.theme === 'night' ? 'day' : 'night'); }
+
+// ═══ UI BUILDERS ═══
 function buildPresets() {
     const grid = document.getElementById('preset-grid');
     grid.innerHTML = '';
@@ -373,9 +505,9 @@ function buildShapes() {
     grid.innerHTML = '';
     SHAPES.forEach(s => {
         const btn = document.createElement('button');
-        btn.className = 'shape-btn'; btn.dataset.id = s;
-        btn.textContent = s;
-        btn.onclick = () => toggleShape(s);
+        btn.className = 'shape-btn'; btn.dataset.id = s.id; btn.title = s.id;
+        btn.innerHTML = `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">${s.svg}</svg>`;
+        btn.onclick = () => toggleShape(s.id);
         grid.appendChild(btn);
     });
     refreshShapesUI();
@@ -403,36 +535,32 @@ function refreshPalettesUI() {
     document.querySelectorAll('#palette-list .palette-btn').forEach(b =>
         b.classList.toggle('active', b.dataset.id === state.palette));
 }
-function refreshPresetUI(presetId) {
+function refreshPresetUI(id) {
     document.querySelectorAll('#preset-grid .preset-btn').forEach(b =>
-        b.classList.toggle('active', b.dataset.id === presetId));
+        b.classList.toggle('active', b.dataset.id === id));
 }
 function refreshAllControls() {
-    ['cellSize','sparsity','noiseScale','octaves','flowSpeed','shapeScale','pulse','glow','exportRes'].forEach(id => {
+    ['cellSize','sparsity','noiseScale','flowSpeed','shapeScale','pulse'].forEach(id => {
         const el = document.getElementById(id);
         if (!el) return;
-        if (id !== 'exportRes') el.value = state[id];
-        document.getElementById(id + '-val').textContent = id === 'exportRes'
-            ? el.value + 'x' : state[id];
+        el.value = state[id];
+        document.getElementById(id + '-val').textContent = state[id];
     });
-    document.getElementById('bgColor').value = state.bgColor;
-    document.getElementById('bgColor-hex').textContent = state.bgColor;
+    const bg = state.bgColor || getBg();
+    document.getElementById('bgColor').value = bg.length === 7 ? bg : '#0a0c0e';
+    document.getElementById('bgColor-hex').textContent = state.bgColor || 'theme';
     document.getElementById('seed').value = state.seed;
     document.getElementById('mouseReactive').checked = state.mouseReactive;
     document.getElementById('animated').checked = state.animated;
     refreshShapesUI(); refreshPalettesUI();
 }
 
-function setPalette(id) {
-    state.palette = id; refreshPalettesUI(); refreshPresetUI(null);
-    regenerate();
-}
+function setPalette(id) { state.palette = id; refreshPalettesUI(); refreshPresetUI(null); regenerate(); }
 function toggleShape(s) {
     const i = state.activeShapes.indexOf(s);
     if (i >= 0) { if (state.activeShapes.length > 1) state.activeShapes.splice(i,1); }
     else state.activeShapes.push(s);
-    refreshShapesUI(); refreshPresetUI(null);
-    regenerate();
+    refreshShapesUI(); refreshPresetUI(null); regenerate();
 }
 function applyPreset(p) {
     Object.assign(state, p.config);
@@ -444,10 +572,12 @@ function applyPreset(p) {
 function resetAll() { applyPreset(PRESETS[0]); }
 function prevSeed() { state.seed = Math.max(1, state.seed - 1); document.getElementById('seed').value = state.seed; refreshPresetUI(null); regenerate(); }
 function nextSeed() { state.seed = state.seed + 1; document.getElementById('seed').value = state.seed; refreshPresetUI(null); regenerate(); }
-function randomSeed() { state.seed = Math.floor(Math.random() * 999999) + 1; document.getElementById('seed').value = state.seed; refreshPresetUI(null); regenerate(); }
+function randomSeed() { state.seed = Math.floor(Math.random()*999999)+1; document.getElementById('seed').value = state.seed; refreshPresetUI(null); regenerate(); }
+
+let dirty = true;
 
 function wireControls() {
-    ['cellSize','sparsity','noiseScale','octaves','flowSpeed','shapeScale','pulse','glow'].forEach(id => {
+    ['cellSize','sparsity','noiseScale','flowSpeed','shapeScale','pulse'].forEach(id => {
         document.getElementById(id).addEventListener('input', e => {
             state[id] = parseFloat(e.target.value);
             document.getElementById(id + '-val').textContent = e.target.value;
@@ -472,9 +602,8 @@ function wireControls() {
     document.getElementById('animated').addEventListener('change', e => {
         state.animated = e.target.checked;
         if (state.animated) startLoop();
-        else { cancelAnimationFrame(animFrame); drawOnce(); }
+        else { cancelAnimationFrame(animFrame); drawFrame(); }
     });
-
     canvas.addEventListener('mousemove', e => {
         const rect = canvas.getBoundingClientRect();
         mousePos.x = (e.clientX - rect.left) / rect.width;
@@ -484,11 +613,11 @@ function wireControls() {
 }
 
 function setCanvasSize() {
-    // Use square 1:1 canvas based on window
-    const size = Math.min(window.innerWidth - 360, window.innerHeight - 40);
-    const display = Math.max(300, size);
+    // Fixed logical size; display scales via CSS
     W = 1200; H = 1200;
     canvas.width = W; canvas.height = H;
+    const size = Math.min(window.innerWidth - 340, window.innerHeight - 40);
+    const display = Math.max(300, size);
     canvas.style.width = display + 'px';
     canvas.style.height = display + 'px';
 }
@@ -501,22 +630,23 @@ function regenerate() {
     const rng = mulberry32(state.seed);
     const pal = getPaletteColors();
     const act = state.activeShapes.length ? state.activeShapes : ['dot'];
-    cells = [];
+    cells = new Array(gridCols * gridRows);
     for (let i = 0; i < gridCols * gridRows; i++) {
         const col = i % gridCols, row = Math.floor(i / gridCols);
-        const sN = fbm(col * 0.08 + 100, row * 0.08 + 100, 3);
-        const cN = fbm(col * 0.06 + 200, row * 0.06 + 200, 3);
-        cells.push({
+        const sN = noise2D(col * 0.08 + 100, row * 0.08 + 100);
+        const cN = noise2D(col * 0.06 + 200, row * 0.06 + 200);
+        cells[i] = {
             shape: act[Math.floor(sN * act.length) % act.length],
             colorIdx: Math.floor(cN * pal.length) % pal.length,
             phase: rng() * Math.PI * 2,
             baseSize: 0.4 + sN * 0.55,
-        });
+        };
     }
     dirty = true;
-    document.getElementById('status').textContent = `seed ${state.seed} · ${gridCols}×${gridRows} grid · ${state.palette} · ${state.activeShapes.length} shape${state.activeShapes.length===1?'':'s'}`;
+    document.getElementById('status').textContent = `seed ${state.seed} · ${gridCols}×${gridRows} · ${state.palette}`;
 }
 
+// ═══ SHAPE DRAW (main canvas) ═══
 function drawShape(x, y, s, shape, color, alpha) {
     ctx.globalAlpha = alpha;
     ctx.fillStyle = color; ctx.strokeStyle = color;
@@ -537,80 +667,78 @@ function drawShape(x, y, s, shape, color, alpha) {
             ctx.lineTo(x+half, y+s*0.9); ctx.lineTo(x+s*0.1, y+half);
             ctx.closePath(); ctx.fill(); break;
     }
-    ctx.globalAlpha = 1;
 }
 
 function drawFrame() {
     const cs = state.cellSize;
     const pal = getPaletteColors();
+    const bg = getBg();
 
-    ctx.fillStyle = state.bgColor;
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = bg;
     ctx.fillRect(0, 0, W, H);
 
-    if (state.glow > 0) {
-        ctx.shadowColor = pal[0];
-        ctx.shadowBlur = state.glow;
-    } else ctx.shadowBlur = 0;
-
     const mouseOn = state.mouseReactive && mousePos.x >= 0;
+    const ns = state.noiseScale;
+    const fs = state.flowSpeed;
+    const sinT = Math.sin(timeT * 0.3) * 0.5;
+    const cosT = Math.cos(timeT * 0.25) * 0.3;
+    const pulseT = timeT * 1.2;
 
-    for (let row = 0; row < gridRows; row++) {
-        for (let col = 0; col < gridCols; col++) {
-            const i = row * gridCols + col;
-            const cell = cells[i];
-            if (!cell) continue;
+    for (let i = 0; i < cells.length; i++) {
+        const cell = cells[i];
+        if (!cell) continue;
+        const col = i % gridCols, row = (i / gridCols) | 0;
 
-            const nx = col * state.noiseScale + timeT * state.flowSpeed + Math.sin(timeT * 0.3) * 0.5;
-            const ny = row * state.noiseScale + timeT * state.flowSpeed * 0.6 + Math.cos(timeT * 0.25) * 0.3;
-            const density = fbm(nx, ny, state.octaves);
+        // 2-octave fbm — fast
+        const nx = col * ns + timeT * fs + sinT;
+        const ny = row * ns + timeT * fs * 0.6 + cosT;
+        const density = fbm2(nx, ny);
 
-            let mouseBoost = 0;
-            if (mouseOn) {
-                const mx = col / gridCols, my = row / gridRows;
-                const dx = mx - mousePos.x, dy = my - mousePos.y;
-                const dist = Math.sqrt(dx*dx + dy*dy);
-                mouseBoost = Math.max(0, 1 - dist / 0.25) * 0.5;
-            }
-
-            if (density + mouseBoost < state.sparsity) continue;
-
-            const energy = Math.min(1, (density + mouseBoost - state.sparsity) * 3.5);
-            const pulseMul = 1 + Math.sin(timeT * 1.2 + cell.phase) * state.pulse * energy;
-            const drawSize = cs * cell.baseSize * state.shapeScale * pulseMul;
-            const x = col * cs + (cs - drawSize) / 2;
-            const y = row * cs + (cs - drawSize) / 2;
-
-            const color = pal[cell.colorIdx % pal.length];
-            drawShape(x, y, drawSize, cell.shape, color, Math.min(1, energy * 1.2));
+        let mouseBoost = 0;
+        if (mouseOn) {
+            const mx = col / gridCols, my = row / gridRows;
+            const dx = mx - mousePos.x, dy = my - mousePos.y;
+            const dist2 = dx*dx + dy*dy; // skip sqrt
+            if (dist2 < 0.0625) mouseBoost = (1 - Math.sqrt(dist2) / 0.25) * 0.5;
         }
-    }
-    ctx.shadowBlur = 0;
-}
 
-function drawOnce() {
-    timeT = 0;
-    drawFrame();
+        if (density + mouseBoost < state.sparsity) continue;
+
+        const energy = Math.min(1, (density + mouseBoost - state.sparsity) * 3.5);
+        const pulseMul = 1 + Math.sin(pulseT + cell.phase) * state.pulse * energy;
+        const drawSize = cs * cell.baseSize * state.shapeScale * pulseMul;
+        const x = col * cs + (cs - drawSize) / 2;
+        const y = row * cs + (cs - drawSize) / 2;
+
+        drawShape(x, y, drawSize, cell.shape, pal[cell.colorIdx % pal.length], Math.min(1, energy * 1.2));
+    }
+    ctx.globalAlpha = 1;
     dirty = false;
 }
 
 function startLoop() {
     cancelAnimationFrame(animFrame);
-    function loop() {
-        timeT += 0.016;
-        drawFrame();
+    function loop(ts) {
+        if (!lastFrameTime) lastFrameTime = ts;
+        const elapsed = ts - lastFrameTime;
+        if (elapsed >= FRAME_INTERVAL) {
+            lastFrameTime = ts - (elapsed % FRAME_INTERVAL);
+            timeT += 0.033; // fixed step for 30fps
+            drawFrame();
+        }
         animFrame = requestAnimationFrame(loop);
     }
-    loop();
+    animFrame = requestAnimationFrame(loop);
 }
 
-// Export
 function exportFrame() {
     const scale = parseInt(document.getElementById('exportRes').value);
     const ec = document.createElement('canvas');
     ec.width = W * scale; ec.height = H * scale;
     const ectx = ec.getContext('2d');
-    ectx.scale(scale, scale);
-    ectx.drawImage(canvas, 0, 0);
+    ectx.imageSmoothingEnabled = false;
+    ectx.drawImage(canvas, 0, 0, W * scale, H * scale);
     const link = document.createElement('a');
     link.download = `pattern-${state.palette}-seed${state.seed}.png`;
     link.href = ec.toDataURL('image/png');
@@ -620,15 +748,11 @@ function exportFrame() {
 let mediaRec, recChunks = [], isRecording = false;
 function toggleRecord() {
     if (isRecording) return;
-    if (!state.animated) {
-        alert('Enable Animated to record a loop.');
-        return;
-    }
+    if (!state.animated) { alert('Enable Animated to record.'); return; }
     recChunks = [];
     const stream = canvas.captureStream(30);
-    try {
-        mediaRec = new MediaRecorder(stream, { mimeType: 'video/webm;codecs=vp9', videoBitsPerSecond: 8000000 });
-    } catch(e) { mediaRec = new MediaRecorder(stream); }
+    try { mediaRec = new MediaRecorder(stream, { mimeType: 'video/webm;codecs=vp9', videoBitsPerSecond: 8000000 }); }
+    catch(e) { mediaRec = new MediaRecorder(stream); }
     mediaRec.ondataavailable = e => { if (e.data.size > 0) recChunks.push(e.data); };
     mediaRec.onstop = () => {
         const blob = new Blob(recChunks, { type: 'video/webm' });
@@ -636,18 +760,19 @@ function toggleRecord() {
         const link = document.createElement('a');
         link.download = `pattern-${state.palette}-seed${state.seed}.webm`;
         link.href = url; link.click();
-        document.getElementById('recordBtn').textContent = 'Record 5s Loop';
+        document.getElementById('recordBtn').textContent = 'Record 5s';
         document.getElementById('recordBtn').classList.remove('primary');
         isRecording = false;
     };
     mediaRec.start();
     isRecording = true;
-    document.getElementById('recordBtn').textContent = 'Recording...';
+    document.getElementById('recordBtn').textContent = 'Recording…';
     document.getElementById('recordBtn').classList.add('primary');
     setTimeout(() => { if (mediaRec.state !== 'inactive') mediaRec.stop(); }, 5000);
 }
 
 // Init
+applyTheme(state.theme);
 setCanvasSize();
 window.addEventListener('resize', setCanvasSize);
 buildPresets();

@@ -1,253 +1,288 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="night">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Signal Cartography — Pattern Portal</title>
+    <title>Video Shader · Aura</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&family=Lora:wght@400;500&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=DM+Mono:wght@300;400;500&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #0a0a0c;
-            --surface: #111114;
-            --surface2: #1a1a1f;
-            --border: #2a2a30;
-            --border-strong: #3a3a42;
-            --text: #e8e6dc;
-            --text-dim: #6a6a70;
-            --accent: #E8421A;
-            --accent-hover: #c8351a;
-            --gold: #F5B810;
+            --ease: cubic-bezier(0.4, 0, 0.2, 1);
+            --font-sans: 'DM Sans', system-ui, sans-serif;
+            --font-mono: 'DM Mono', monospace;
+            --font-serif: 'Instrument Serif', serif;
+        }
+        html[data-theme="day"] {
+            --bg: #f5f5f0; --bg-card: #eaeae5;
+            --text: #1a1a1a; --text-body: rgba(26,26,26,0.65);
+            --text-muted: rgba(26,26,26,0.4); --text-dim: rgba(26,26,26,0.25);
+            --border: rgba(0,0,0,0.08); --border-strong: rgba(0,0,0,0.14);
+            --accent: #E8421A; --canvas-bg: #eaeae5;
+        }
+        html[data-theme="night"] {
+            --bg: #131719; --bg-card: #1a1d20;
+            --text: #ededed; --text-body: rgba(237,237,237,0.65);
+            --text-muted: rgba(237,237,237,0.4); --text-dim: rgba(237,237,237,0.25);
+            --border: rgba(255,255,255,0.08); --border-strong: rgba(255,255,255,0.14);
+            --accent: #E8421A; --canvas-bg: #0a0c0e;
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: 'Poppins', sans-serif;
-            background: var(--bg);
-            min-height: 100vh;
-            color: var(--text);
-            overflow: hidden;
+        html, body {
+            background: var(--bg); color: var(--text);
+            font-family: var(--font-sans); font-size: 14px;
+            min-height: 100vh; overflow: hidden;
+            transition: background 0.4s var(--ease), color 0.4s var(--ease);
+            -webkit-font-smoothing: antialiased;
         }
         .app { display: flex; height: 100vh; }
         .sidebar {
-            width: 320px; flex-shrink: 0;
-            background: var(--surface);
-            border-right: 1px solid var(--border);
-            padding: 20px;
-            overflow-y: auto;
+            width: 300px; flex-shrink: 0;
+            background: var(--bg); border-right: 1px solid var(--border);
+            padding: 20px; overflow-y: auto;
             display: flex; flex-direction: column;
         }
-        .sidebar h1 { font-family: 'Lora', serif; font-size: 22px; font-weight: 500; margin-bottom: 2px; }
-        .sidebar .subtitle { color: var(--text-dim); font-size: 12px; margin-bottom: 20px; line-height: 1.4; }
-        .section { margin-bottom: 22px; }
-        .section-title {
-            font-size: 10px; font-weight: 600; text-transform: uppercase;
-            letter-spacing: 1.5px; color: var(--text-dim); margin-bottom: 10px;
+        .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .back {
+            font-family: var(--font-mono); font-size: 11px;
+            color: var(--text-muted); text-decoration: none;
+            letter-spacing: 1px; text-transform: uppercase;
         }
-        .control { margin-bottom: 12px; }
+        .back:hover { color: var(--text); }
+        .theme-toggle {
+            background: transparent; border: 1px solid var(--border-strong);
+            border-radius: 3px; padding: 4px 10px; cursor: pointer;
+            font-family: var(--font-mono); font-size: 11px;
+            color: var(--text-body); letter-spacing: 1px;
+            text-transform: uppercase; transition: all 0.2s var(--ease);
+        }
+        .theme-toggle:hover { color: var(--text); border-color: var(--text); }
+        .sidebar h1 {
+            font-family: var(--font-serif); font-weight: 400;
+            font-size: 28px; line-height: 1.1; letter-spacing: -0.5px;
+            margin-bottom: 4px;
+        }
+        .subtitle { font-size: 12px; color: var(--text-body); line-height: 1.5; margin-bottom: 24px; }
+        .section { margin-bottom: 20px; }
+        .section-title {
+            font-family: var(--font-mono); font-size: 10px;
+            letter-spacing: 1px; text-transform: uppercase;
+            color: var(--text-muted); margin-bottom: 10px;
+        }
+        .control { margin-bottom: 10px; }
         .control label {
             display: flex; justify-content: space-between; align-items: center;
-            font-size: 12px; color: var(--text); margin-bottom: 5px;
+            font-family: var(--font-mono); font-size: 11px;
+            color: var(--text-body); margin-bottom: 4px; letter-spacing: 0.5px;
         }
-        .control .val { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--text-dim); }
+        .val { color: var(--text); font-weight: 500; }
         input[type="range"] {
-            width: 100%; height: 3px; background: var(--border);
-            border-radius: 2px; outline: none; -webkit-appearance: none;
+            width: 100%; height: 2px; background: var(--border-strong);
+            border-radius: 1px; outline: none; -webkit-appearance: none; appearance: none;
         }
         input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none; width: 13px; height: 13px;
-            background: var(--accent); border-radius: 50%; cursor: pointer;
+            -webkit-appearance: none; width: 10px; height: 10px;
+            background: var(--text); border-radius: 50%; cursor: pointer;
         }
         input[type="range"]::-moz-range-thumb {
-            width: 13px; height: 13px; background: var(--accent);
+            width: 10px; height: 10px; background: var(--text);
             border-radius: 50%; border: none; cursor: pointer;
         }
         .btn {
-            background: var(--surface2); color: var(--text);
-            border: 1px solid var(--border); padding: 7px 12px;
-            border-radius: 5px; font-size: 11px; font-weight: 500;
-            cursor: pointer; transition: all 0.15s;
-            font-family: 'Poppins', sans-serif;
+            background: transparent; color: var(--text-body);
+            border: 1px solid var(--border-strong); padding: 5px 10px;
+            border-radius: 3px; font-family: var(--font-mono);
+            font-size: 11px; letter-spacing: 0.5px;
+            cursor: pointer; transition: all 0.15s var(--ease);
         }
-        .btn:hover { background: var(--border); border-color: var(--border-strong); }
-        .btn.primary { background: var(--accent); border-color: var(--accent); color: white; }
-        .btn.primary:hover { background: var(--accent-hover); }
-        .btn.active { background: rgba(232,66,26,0.15); border-color: var(--accent); color: var(--accent); }
-        .btn-row { display: flex; gap: 5px; flex-wrap: wrap; }
+        .btn:hover { color: var(--text); border-color: var(--text); }
+        .btn.active { color: var(--text); border-color: var(--text); background: rgba(128,128,128,0.08); }
+        .btn.primary { background: var(--text); color: var(--bg); border-color: var(--text); }
+        .btn.primary:hover { opacity: 0.85; }
+        .btn-row { display: flex; gap: 6px; flex-wrap: wrap; }
         .btn-row .btn { flex: 1; min-width: 0; text-align: center; }
-        .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
-        .btn-grid .btn { text-align: center; }
         select {
-            width: 100%; background: var(--surface2); color: var(--text);
-            border: 1px solid var(--border); padding: 6px 10px;
-            border-radius: 5px; font-size: 12px; font-family: 'Poppins', sans-serif;
+            width: 100%; background: transparent; color: var(--text);
+            border: 1px solid var(--border-strong); padding: 5px 10px;
+            border-radius: 3px; font-family: var(--font-mono);
+            font-size: 11px; letter-spacing: 0.5px;
             cursor: pointer; outline: none;
         }
-        select:focus { border-color: var(--accent); }
+        select:focus { border-color: var(--text); }
         input[type="color"] {
-            width: 26px; height: 26px; border: none;
-            border-radius: 4px; cursor: pointer; background: none; padding: 0;
+            width: 24px; height: 24px; border: none;
+            border-radius: 3px; cursor: pointer; background: none; padding: 0;
         }
         .color-row { display: flex; align-items: center; gap: 8px; }
-        .color-hex { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--text-dim); }
-        .palette-list { display: flex; flex-direction: column; gap: 4px; }
+        .color-hex { font-family: var(--font-mono); font-size: 11px; color: var(--text-body); letter-spacing: 0.5px; }
+
+        .mode-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
+        .palette-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
         .palette-btn {
-            display: flex; align-items: center; gap: 10px;
-            padding: 6px 8px; border-radius: 5px; cursor: pointer;
-            border: 1px solid var(--border); background: var(--surface2);
-            transition: all 0.15s;
+            padding: 6px 8px; cursor: pointer;
+            border: 1px solid var(--border-strong); border-radius: 3px;
+            background: transparent; transition: all 0.15s var(--ease);
+            display: flex; flex-direction: column; gap: 4px;
         }
-        .palette-btn:hover { border-color: var(--border-strong); }
-        .palette-btn.active { border-color: var(--accent); background: rgba(232,66,26,0.08); }
-        .palette-btn .swatches { display: flex; gap: 2px; flex-shrink: 0; }
-        .palette-btn .swatch { width: 10px; height: 10px; border-radius: 2px; }
-        .palette-btn .pal-name { font-size: 11px; color: var(--text); }
+        .palette-btn:hover { border-color: var(--text); }
+        .palette-btn.active { border-color: var(--text); background: rgba(128,128,128,0.08); }
+        .palette-btn .swatches { display: flex; gap: 2px; }
+        .palette-btn .swatch { width: 10px; height: 10px; border-radius: 2px; flex: 1; }
+        .palette-btn .pal-name {
+            font-family: var(--font-mono); font-size: 10px;
+            color: var(--text-body); letter-spacing: 0.5px; text-transform: uppercase;
+        }
+        .palette-btn.active .pal-name { color: var(--text); }
+
+        .shapes-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; }
+        .shape-btn {
+            aspect-ratio: 1; padding: 6px;
+            border: 1px solid var(--border-strong); border-radius: 3px;
+            background: transparent; cursor: pointer;
+            transition: all 0.15s var(--ease);
+            display: flex; align-items: center; justify-content: center;
+        }
+        .shape-btn:hover { border-color: var(--text); }
+        .shape-btn.active { border-color: var(--text); background: rgba(128,128,128,0.08); }
+        .shape-btn svg { width: 60%; height: 60%; }
+        .shape-btn svg * { fill: var(--text-muted); stroke: var(--text-muted); transition: all 0.15s; }
+        .shape-btn.active svg * { fill: var(--text); stroke: var(--text); }
+
+        .preset-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
+        .preset-btn {
+            padding: 7px 8px; text-align: left; cursor: pointer;
+            border: 1px solid var(--border-strong); border-radius: 3px;
+            background: transparent; transition: all 0.15s var(--ease);
+        }
+        .preset-btn:hover { border-color: var(--text); }
+        .preset-btn.active { border-color: var(--text); background: rgba(128,128,128,0.08); }
+        .preset-btn .title {
+            font-family: var(--font-mono); font-size: 11px;
+            color: var(--text); letter-spacing: 0.5px;
+            text-transform: uppercase; display: block; margin-bottom: 2px;
+        }
+        .preset-btn .desc {
+            font-family: var(--font-mono); font-size: 9px;
+            color: var(--text-muted); letter-spacing: 0.3px; display: block;
+        }
+
+        .toggle-row {
+            display: flex; gap: 8px; align-items: center;
+            font-family: var(--font-mono); font-size: 11px;
+            color: var(--text-body); letter-spacing: 0.5px; cursor: pointer;
+        }
+        .toggle-row input[type="checkbox"] { cursor: pointer; accent-color: var(--text); width: 12px; height: 12px; }
+
         .canvas-area {
             flex: 1; display: flex; flex-direction: column;
             align-items: center; justify-content: center;
-            position: relative; background: var(--bg); padding: 16px;
+            background: var(--bg-card); padding: 16px; position: relative;
+            transition: background 0.4s var(--ease);
         }
-        #output-canvas {
-            max-width: 100%; max-height: 88vh;
-            border-radius: 4px; cursor: crosshair;
-        }
+        #output-canvas { max-width: 100%; max-height: 88vh; cursor: crosshair; }
         .upload-zone {
-            border: 2px dashed var(--border);
-            border-radius: 12px; padding: 60px 40px;
+            border: 1px dashed var(--border-strong);
+            border-radius: 4px; padding: 60px 40px;
             text-align: center; cursor: pointer;
             transition: all 0.2s; max-width: 500px;
         }
-        .upload-zone:hover { border-color: var(--accent); background: rgba(232,66,26,0.04); }
-        .upload-zone h2 { font-family: 'Lora', serif; font-size: 24px; margin-bottom: 8px; }
-        .upload-zone p { color: var(--text-dim); font-size: 13px; margin-bottom: 16px; }
+        .upload-zone:hover { border-color: var(--text); background: rgba(128,128,128,0.04); }
+        .upload-zone h2 {
+            font-family: var(--font-serif); font-weight: 400;
+            font-size: 28px; margin-bottom: 8px;
+        }
+        .upload-zone p { color: var(--text-body); font-size: 13px; margin-bottom: 16px; }
         .upload-zone input { display: none; }
+
         .transport {
             position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%);
             display: flex; align-items: center; gap: 10px;
-            background: rgba(17,17,20,0.92); backdrop-filter: blur(12px);
-            padding: 8px 16px; border-radius: 8px; border: 1px solid var(--border);
+            background: var(--bg); backdrop-filter: blur(12px);
+            padding: 8px 14px; border-radius: 4px; border: 1px solid var(--border-strong);
         }
-        .transport .btn { padding: 5px 10px; font-size: 13px; }
+        .transport .btn { padding: 4px 8px; font-size: 12px; }
         .transport .time {
-            font-family: 'IBM Plex Mono', monospace; font-size: 11px;
-            color: var(--text-dim); min-width: 75px; text-align: center;
+            font-family: var(--font-mono); font-size: 11px;
+            color: var(--text-body); min-width: 70px; text-align: center;
+            letter-spacing: 0.5px;
         }
         #seek-bar { width: 180px; }
         .hidden { display: none !important; }
         .rec-indicator {
             position: absolute; top: 16px; right: 16px;
             display: flex; align-items: center; gap: 6px;
-            background: rgba(220,40,40,0.9); color: white;
-            padding: 5px 12px; border-radius: 5px;
-            font-size: 11px; font-weight: 600;
+            background: #c8351a; color: white;
+            padding: 5px 12px; border-radius: 3px;
+            font-family: var(--font-mono); font-size: 10px;
+            letter-spacing: 1px; font-weight: 500;
             animation: recPulse 1s infinite;
         }
         @keyframes recPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
-        .preset-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
-        .preset-btn {
-            padding: 8px 6px; font-size: 10px; font-weight: 500;
-            background: var(--surface2); color: var(--text);
-            border: 1px solid var(--border); border-radius: 5px;
-            cursor: pointer; transition: all 0.15s;
-            text-align: center; line-height: 1.3;
-        }
-        .preset-btn:hover { border-color: var(--border-strong); }
-        .preset-btn.active { border-color: var(--accent); background: rgba(232,66,26,0.1); color: var(--accent); }
-        .preset-btn .title { font-weight: 600; display: block; margin-bottom: 2px; }
-        .preset-btn .desc { font-size: 9px; color: var(--text-dim); display: block; }
-        .preset-btn.active .desc { color: rgba(232,66,26,0.7); }
-        .shapes-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
-        .shape-btn {
-            padding: 6px 2px; font-size: 10px;
-            background: var(--surface2); color: var(--text);
-            border: 1px solid var(--border); border-radius: 4px;
-            cursor: pointer; transition: all 0.15s; text-align: center;
-        }
-        .shape-btn:hover { border-color: var(--border-strong); }
-        .shape-btn.active { border-color: var(--accent); background: rgba(232,66,26,0.1); color: var(--accent); }
-        .toggle-row { display: flex; gap: 6px; align-items: center; font-size: 12px; }
-        .toggle-row input[type="checkbox"] { cursor: pointer; accent-color: var(--accent); }
+
+        .sidebar::-webkit-scrollbar { width: 4px; }
+        .sidebar::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 2px; }
+
         @media (max-width: 900px) {
             .app { flex-direction: column; }
             .sidebar { width: 100%; max-height: 50vh; }
-            .canvas-area { padding: 12px; }
         }
     </style>
 </head>
 <body>
 <div class="app">
     <div class="sidebar">
-        <h1>Signal Cartography</h1>
-        <div class="subtitle">A portal for computational patterns. Video · Morse · Aura. Drop a video, pick a mode.</div>
-
-        <div class="section">
-            <div class="section-title">Preset</div>
-            <div class="preset-grid" id="preset-grid"></div>
+        <div class="topbar">
+            <a href="/" class="back">← Aura</a>
+            <button class="theme-toggle" onclick="toggleTheme()" id="theme-btn">Day</button>
         </div>
+        <h1>Video Shader</h1>
+        <div class="subtitle">Drop a video, pick a mode. Morse, ASCII, aura grid, braille — motion-reactive, palette-driven.</div>
 
-        <div class="section">
-            <div class="section-title">Mode</div>
-            <div class="btn-grid" id="mode-grid"></div>
-        </div>
+        <div class="section"><div class="section-title">Preset</div><div class="preset-grid" id="preset-grid"></div></div>
+        <div class="section"><div class="section-title">Mode</div><div class="mode-grid" id="mode-grid"></div></div>
+        <div class="section"><div class="section-title">Shapes (Aura mode)</div><div class="shapes-grid" id="shapes-grid"></div></div>
+        <div class="section"><div class="section-title">Palette</div><div class="palette-grid" id="palette-list"></div></div>
 
-        <div class="section">
-            <div class="section-title">Shapes (Aura)</div>
-            <div class="shapes-grid" id="shapes-grid"></div>
-            <div style="font-size:10px;color:var(--text-dim);margin-top:6px">Active when mode = Aura Grid</div>
-        </div>
-
-        <div class="section">
-            <div class="section-title">Palette</div>
-            <div class="palette-list" id="palette-list"></div>
-        </div>
-
-        <div class="section">
-            <div class="section-title">Grid</div>
+        <div class="section"><div class="section-title">Grid</div>
             <div class="control"><label>Cell Size <span class="val" id="cellSize-val">12</span></label>
                 <input type="range" id="cellSize" min="4" max="32" step="1" value="12"></div>
             <div class="control"><label>Contrast <span class="val" id="contrast-val">1.4</span></label>
                 <input type="range" id="contrast" min="0.5" max="3.0" step="0.1" value="1.4"></div>
-            <div class="control"><label>Brightness <span class="val" id="brightness-val">0</span></label>
-                <input type="range" id="brightness" min="-50" max="50" step="5" value="0"></div>
             <div class="control"><label>Threshold <span class="val" id="threshold-val">0.08</span></label>
                 <input type="range" id="threshold" min="0.0" max="0.4" step="0.01" value="0.08"></div>
-            <div class="control"><label>Sparsity (noise) <span class="val" id="sparsity-val">0.38</span></label>
+            <div class="control"><label>Sparsity <span class="val" id="sparsity-val">0.38</span></label>
                 <input type="range" id="sparsity" min="0.0" max="0.7" step="0.02" value="0.38"></div>
-            <div class="control"><label>Motion Reactivity <span class="val" id="reactivity-val">0.12</span></label>
+            <div class="control"><label>Reactivity <span class="val" id="reactivity-val">0.12</span></label>
                 <input type="range" id="reactivity" min="0.02" max="0.5" step="0.02" value="0.12"></div>
         </div>
 
-        <div class="section">
-            <div class="section-title">Color</div>
-            <div class="control">
-                <select id="colorMode">
-                    <option value="palette" selected>Palette</option>
-                    <option value="mono">Monochrome</option>
-                    <option value="source">Source Color</option>
-                </select>
-            </div>
+        <div class="section"><div class="section-title">Color</div>
+            <div class="control"><select id="colorMode">
+                <option value="palette" selected>Palette</option>
+                <option value="mono">Monochrome</option>
+                <option value="source">Source Color</option>
+            </select></div>
             <div class="control"><label>Mono/Tint</label>
-                <div class="color-row"><input type="color" id="tintColor" value="#f5f5f0"><span class="color-hex" id="tintColor-hex">#f5f5f0</span></div></div>
+                <div class="color-row"><input type="color" id="tintColor" value="#f5f5f0">
+                <span class="color-hex" id="tintColor-hex">#f5f5f0</span></div></div>
             <div class="control"><label>Background</label>
-                <div class="color-row"><input type="color" id="bgColor" value="#0a0a0c"><span class="color-hex" id="bgColor-hex">#0a0a0c</span></div></div>
+                <div class="color-row"><input type="color" id="bgColor" value="#0a0c0e">
+                <span class="color-hex" id="bgColor-hex">#0a0c0e</span></div></div>
         </div>
 
-        <div class="section">
-            <div class="section-title">Effects</div>
+        <div class="section"><div class="section-title">Effects</div>
             <div class="control"><label>Scanlines <span class="val" id="scanlines-val">0.0</span></label>
                 <input type="range" id="scanlines" min="0" max="1.0" step="0.05" value="0.0"></div>
-            <div class="control"><label>Noise <span class="val" id="noiseAmt-val">0.02</span></label>
-                <input type="range" id="noiseAmt" min="0" max="0.15" step="0.01" value="0.02"></div>
             <div class="control"><label>Glow <span class="val" id="glow-val">0</span></label>
                 <input type="range" id="glow" min="0" max="8" step="1" value="0"></div>
             <div class="toggle-row" style="margin-top:10px">
-                <input type="checkbox" id="mouseReactive"><label for="mouseReactive">Mouse reactivity</label></div>
+                <input type="checkbox" id="mouseReactive"><label for="mouseReactive">Mouse reactive</label></div>
             <div class="toggle-row" style="margin-top:6px">
-                <input type="checkbox" id="mutateOnMotion" checked><label for="mutateOnMotion">Mutate shapes on motion</label></div>
+                <input type="checkbox" id="mutateOnMotion" checked><label for="mutateOnMotion">Mutate on motion</label></div>
         </div>
 
-        <div class="section">
-            <div class="section-title">Export</div>
+        <div class="section"><div class="section-title">Export</div>
             <div class="btn-row">
                 <button class="btn primary" onclick="exportFrame()">Screenshot</button>
                 <button class="btn" id="recordBtn" onclick="toggleRecord()">Record</button>
@@ -263,23 +298,22 @@
 
     <div class="canvas-area">
         <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
-            <h2>Signal Cartography · Pattern Portal</h2>
-            <p>Drop a video to render it through computational pattern modes.<br>Morse code · ASCII · Aura grid · Braille</p>
+            <h2>Drop video here</h2>
+            <p>or click to browse. MP4, WebM, MOV</p>
             <input type="file" id="fileInput" accept="video/*" onchange="handleFile(this.files[0])">
         </div>
         <canvas id="output-canvas" class="hidden"></canvas>
         <div class="transport hidden" id="transport">
-            <button class="btn" id="playBtn" onclick="togglePlay()">&#9654;</button>
+            <button class="btn" id="playBtn" onclick="togglePlay()">▶</button>
             <input type="range" id="seek-bar" min="0" max="100" step="0.1" value="0" oninput="seek(this.value)">
             <span class="time" id="timeDisplay">0:00 / 0:00</span>
-            <button class="btn" id="muteBtn" onclick="toggleMute()">&#128266;</button>
+            <button class="btn" id="muteBtn" onclick="toggleMute()">🔊</button>
         </div>
-        <div class="rec-indicator hidden" id="recIndicator">&#9679; REC</div>
+        <div class="rec-indicator hidden" id="recIndicator">● REC</div>
     </div>
 </div>
 
 <video id="srcVideo" style="display:none" playsinline loop></video>
-<canvas id="sample-canvas" style="display:none"></canvas>
 
 <script>
 const MORSE_MAP = {'A':'.-','B':'-...','C':'-.-.','D':'-..','E':'.','F':'..-.','G':'--.','H':'....','I':'..','J':'.---','K':'-.-','L':'.-..','M':'--','N':'-.','O':'---','P':'.--.','Q':'--.-','R':'.-.','S':'...','T':'-','U':'..-','V':'...-','W':'.--','X':'-..-','Y':'-.--','Z':'--..'};
@@ -291,7 +325,6 @@ const CHARSETS = {
     'braille': [' ', '\u2801', '\u2803', '\u2807', '\u280F', '\u281F', '\u283F', '\u287F', '\u28FF'],
 };
 
-// ═══ AURA PALETTES (from aura-life) ═══
 const PALETTES = [
     { id: 'brand', label: 'Brand', colors: ['#E8421A','#F07820','#F5B810','#F2A08A','#8AAEE0','#D4C020','#7A9040','#FFFFFF'] },
     { id: 'warm', label: 'Warm', colors: ['#E8421A','#F07820','#F5B810','#E37128'] },
@@ -306,65 +339,71 @@ const PALETTES = [
 ];
 
 const MODES = [
-    { id: 'aura', label: 'Aura Grid' },
-    { id: 'morse', label: 'Morse Code' },
-    { id: 'ascii-dense', label: 'ASCII Dense' },
-    { id: 'ascii-light', label: 'ASCII Light' },
-    { id: 'blocks', label: 'Blocks' },
-    { id: 'braille', label: 'Braille' },
+    { id: 'aura', label: 'Aura' }, { id: 'morse', label: 'Morse' },
+    { id: 'ascii-dense', label: 'ASCII+' }, { id: 'ascii-light', label: 'ASCII' },
+    { id: 'blocks', label: 'Blocks' }, { id: 'braille', label: 'Braille' },
 ];
 
-const SHAPES = ['circle', 'cross', 'rect', 'dot', 'ring', 'dash', 'diamond'];
+const SHAPES = [
+    { id: 'circle', svg: '<circle cx="12" cy="12" r="9" />' },
+    { id: 'ring', svg: '<circle cx="12" cy="12" r="8" fill="none" stroke-width="3" />' },
+    { id: 'cross', svg: '<rect x="10" y="3" width="4" height="18" /><rect x="3" y="10" width="18" height="4" />' },
+    { id: 'rect', svg: '<rect x="4" y="4" width="16" height="16" />' },
+    { id: 'dot', svg: '<circle cx="12" cy="12" r="3.5" />' },
+    { id: 'dash', svg: '<rect x="3" y="10" width="18" height="4" />' },
+    { id: 'diamond', svg: '<polygon points="12,3 21,12 12,21 3,12" />' },
+];
+const SHAPE_IDS = SHAPES.map(s => s.id);
 
 const PRESETS = [
-    { id: 'aura-brand', title: 'Aura', desc: 'Brand palette grid',
+    { id: 'aura', title: 'Aura', desc: 'Brand grid',
       config: { mode: 'aura', palette: 'brand', cellSize: 12, contrast: 1.4, threshold: 0.08, sparsity: 0.38,
-                activeShapes: ['circle','cross','rect','dot','ring','dash','diamond'], colorMode: 'palette',
-                tintColor: '#f5f5f0', bgColor: '#0a0a0c', scanlines: 0, noiseAmt: 0.02, glow: 0, mutateOnMotion: true, reactivity: 0.12 } },
-    { id: 'telegraph', title: 'Telegraph', desc: 'Morse on cream',
+                activeShapes: SHAPE_IDS.slice(), colorMode: 'palette',
+                tintColor: '#f5f5f0', bgColor: null, scanlines: 0, glow: 0, mutateOnMotion: true, reactivity: 0.12 } },
+    { id: 'telegraph', title: 'Telegraph', desc: 'Morse',
       config: { mode: 'morse', palette: 'mono', cellSize: 10, contrast: 1.6, threshold: 0.1, sparsity: 0.38,
                 activeShapes: ['dot'], colorMode: 'mono', tintColor: '#f5e8c0', bgColor: '#1a1410',
-                scanlines: 0.2, noiseAmt: 0.04, glow: 2, mutateOnMotion: false, reactivity: 0.12 } },
-    { id: 'terminal', title: 'Terminal', desc: 'Green phosphor',
+                scanlines: 0.2, glow: 2, mutateOnMotion: false, reactivity: 0.12 } },
+    { id: 'terminal', title: 'Terminal', desc: 'Phosphor',
       config: { mode: 'ascii-dense', palette: 'mono', cellSize: 8, contrast: 1.8, threshold: 0.12, sparsity: 0.38,
                 activeShapes: ['dot'], colorMode: 'mono', tintColor: '#50ff80', bgColor: '#001005',
-                scanlines: 0.5, noiseAmt: 0.06, glow: 4, mutateOnMotion: false, reactivity: 0.12 } },
-    { id: 'mudigere', title: 'Mudigere', desc: 'Earth tones',
+                scanlines: 0.5, glow: 4, mutateOnMotion: false, reactivity: 0.12 } },
+    { id: 'mudigere', title: 'Mudigere', desc: 'Earth',
       config: { mode: 'aura', palette: 'earth', cellSize: 10, contrast: 1.5, threshold: 0.05, sparsity: 0.25,
                 activeShapes: ['circle','dot','ring','diamond'], colorMode: 'palette',
-                tintColor: '#f5f5f0', bgColor: '#0a0a0c', scanlines: 0, noiseAmt: 0.02, glow: 0, mutateOnMotion: true, reactivity: 0.12 } },
-    { id: 'ember', title: 'Ember', desc: 'Fire & motion',
+                tintColor: '#f5f5f0', bgColor: null, scanlines: 0, glow: 0, mutateOnMotion: true, reactivity: 0.12 } },
+    { id: 'ember', title: 'Ember', desc: 'Fire',
       config: { mode: 'aura', palette: 'ember', cellSize: 14, contrast: 1.7, threshold: 0.05, sparsity: 0.32,
                 activeShapes: ['circle','cross','dot','diamond'], colorMode: 'palette',
-                tintColor: '#f5f5f0', bgColor: '#0a0a0c', scanlines: 0, noiseAmt: 0.04, glow: 3, mutateOnMotion: true, reactivity: 0.15 } },
-    { id: 'ocean', title: 'Ocean', desc: 'Cool blue clusters',
-      config: { mode: 'aura', palette: 'ocean', cellSize: 10, contrast: 1.3, threshold: 0.06, sparsity: 0.42,
-                activeShapes: ['dot','ring','circle'], colorMode: 'palette',
-                tintColor: '#f5f5f0', bgColor: '#0a0a0c', scanlines: 0, noiseAmt: 0.02, glow: 1, mutateOnMotion: true, reactivity: 0.12 } },
-    { id: 'dusk', title: 'Dusk', desc: 'Soft braille',
+                tintColor: '#f5f5f0', bgColor: null, scanlines: 0, glow: 3, mutateOnMotion: true, reactivity: 0.15 } },
+    { id: 'dusk', title: 'Dusk', desc: 'Braille',
       config: { mode: 'braille', palette: 'dusk', cellSize: 8, contrast: 1.3, threshold: 0.1, sparsity: 0.38,
                 activeShapes: ['dot'], colorMode: 'palette',
-                tintColor: '#f5f5f0', bgColor: '#0a0a0c', scanlines: 0.15, noiseAmt: 0.03, glow: 2, mutateOnMotion: false, reactivity: 0.12 } },
-    { id: 'mineral', title: 'Mineral', desc: 'Cold blocks',
+                tintColor: '#f5f5f0', bgColor: null, scanlines: 0.15, glow: 2, mutateOnMotion: false, reactivity: 0.12 } },
+    { id: 'mineral', title: 'Mineral', desc: 'Blocks',
       config: { mode: 'blocks', palette: 'mineral', cellSize: 10, contrast: 1.5, threshold: 0.1, sparsity: 0.38,
                 activeShapes: ['dot'], colorMode: 'palette',
-                tintColor: '#f5f5f0', bgColor: '#0a0a0c', scanlines: 0, noiseAmt: 0.02, glow: 0, mutateOnMotion: false, reactivity: 0.12 } },
+                tintColor: '#f5f5f0', bgColor: null, scanlines: 0, glow: 0, mutateOnMotion: false, reactivity: 0.12 } },
+    { id: 'ocean', title: 'Ocean', desc: 'Blue',
+      config: { mode: 'aura', palette: 'ocean', cellSize: 10, contrast: 1.3, threshold: 0.06, sparsity: 0.42,
+                activeShapes: ['dot','ring','circle'], colorMode: 'palette',
+                tintColor: '#f5f5f0', bgColor: null, scanlines: 0, glow: 1, mutateOnMotion: true, reactivity: 0.12 } },
 ];
 
 const video = document.getElementById('srcVideo');
 const outCanvas = document.getElementById('output-canvas');
-const outCtx = outCanvas.getContext('2d');
-const sampleCanvas = document.getElementById('sample-canvas');
-const sampleCtx = sampleCanvas.getContext('2d', { willReadFrequently: true });
+const outCtx = outCanvas.getContext('2d', { alpha: false });
+const gridSampleCanvas = document.createElement('canvas');
+const gridSampleCtx = gridSampleCanvas.getContext('2d', { willReadFrequently: true });
 
 let state = {
     mode: 'aura', palette: 'brand',
-    activeShapes: ['circle','cross','rect','dot','ring','dash','diamond'],
-    cellSize: 12, contrast: 1.4, brightness: 0, threshold: 0.08, sparsity: 0.38,
-    reactivity: 0.12,
-    colorMode: 'palette', tintColor: '#f5f5f0', bgColor: '#0a0a0c',
-    scanlines: 0.0, noiseAmt: 0.02, glow: 0,
+    activeShapes: SHAPE_IDS.slice(),
+    cellSize: 12, contrast: 1.4, threshold: 0.08, sparsity: 0.38, reactivity: 0.12,
+    colorMode: 'palette', tintColor: '#f5f5f0', bgColor: null,
+    scanlines: 0.0, glow: 0,
     mouseReactive: false, mutateOnMotion: true,
+    theme: localStorage.getItem('aura-theme') || 'night',
 };
 
 let isPlaying = false, isMuted = false, animFrame = null;
@@ -373,10 +412,9 @@ let cells = [], gridCols = 0, gridRows = 0;
 let prevFrameData = null, timeT = 0;
 let cellMorseCache = [];
 let mousePos = { x: -1, y: -1 };
-const gridSampleCanvas = document.createElement('canvas');
-const gridSampleCtx = gridSampleCanvas.getContext('2d', { willReadFrequently: true });
+let lastFrameTime = 0;
+const FRAME_INTERVAL = 1000 / 30;
 
-// Noise (aura-life fbm)
 function hashN(x, y) {
     let h = x * 374761393 + y * 668265263;
     h = (h ^ (h >> 13)) * 1274126177;
@@ -390,11 +428,7 @@ function noise2D(x, y) {
     const c = hashN(ix, iy+1), d = hashN(ix+1, iy+1);
     return a + (b-a)*fx + (c-a)*fy + (a-b-c+d)*fx*fy;
 }
-function fbm(x, y, octaves) {
-    let val = 0, amp = 0.5, freq = 1;
-    for (let i = 0; i < octaves; i++) { val += amp * noise2D(x*freq, y*freq); amp *= 0.5; freq *= 2; }
-    return val;
-}
+function fbm2(x, y) { return 0.5 * noise2D(x, y) + 0.25 * noise2D(x*2, y*2); }
 function mulberry32(a) {
     return function() {
         a |= 0; a = a + 0x6D2B79F5 | 0;
@@ -404,81 +438,76 @@ function mulberry32(a) {
     };
 }
 
-// UI builders
+function applyTheme(t) {
+    state.theme = t;
+    document.documentElement.setAttribute('data-theme', t);
+    document.getElementById('theme-btn').textContent = t === 'night' ? 'Day' : 'Night';
+    localStorage.setItem('aura-theme', t);
+}
+function toggleTheme() { applyTheme(state.theme === 'night' ? 'day' : 'night'); }
+function getBg() {
+    if (state.bgColor) return state.bgColor;
+    return getComputedStyle(document.documentElement).getPropertyValue('--canvas-bg').trim() || '#0a0c0e';
+}
+
 function buildPresets() {
-    const grid = document.getElementById('preset-grid');
-    grid.innerHTML = '';
+    const g = document.getElementById('preset-grid'); g.innerHTML = '';
     PRESETS.forEach(p => {
-        const btn = document.createElement('button');
-        btn.className = 'preset-btn'; btn.dataset.id = p.id;
-        btn.innerHTML = `<span class="title">${p.title}</span><span class="desc">${p.desc}</span>`;
-        btn.onclick = () => applyPreset(p);
-        grid.appendChild(btn);
+        const b = document.createElement('button');
+        b.className = 'preset-btn'; b.dataset.id = p.id;
+        b.innerHTML = `<span class="title">${p.title}</span><span class="desc">${p.desc}</span>`;
+        b.onclick = () => applyPreset(p); g.appendChild(b);
     });
 }
 function buildModes() {
-    const grid = document.getElementById('mode-grid');
-    grid.innerHTML = '';
+    const g = document.getElementById('mode-grid'); g.innerHTML = '';
     MODES.forEach(m => {
-        const btn = document.createElement('button');
-        btn.className = 'btn'; btn.dataset.id = m.id;
-        btn.textContent = m.label;
-        btn.onclick = () => setMode(m.id);
-        grid.appendChild(btn);
+        const b = document.createElement('button');
+        b.className = 'btn'; b.dataset.id = m.id;
+        b.textContent = m.label;
+        b.onclick = () => setMode(m.id); g.appendChild(b);
     });
     refreshModeUI();
 }
 function buildShapes() {
-    const grid = document.getElementById('shapes-grid');
-    grid.innerHTML = '';
+    const g = document.getElementById('shapes-grid'); g.innerHTML = '';
     SHAPES.forEach(s => {
-        const btn = document.createElement('button');
-        btn.className = 'shape-btn'; btn.dataset.id = s;
-        btn.textContent = s;
-        btn.onclick = () => toggleShape(s);
-        grid.appendChild(btn);
+        const b = document.createElement('button');
+        b.className = 'shape-btn'; b.dataset.id = s.id; b.title = s.id;
+        b.innerHTML = `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">${s.svg}</svg>`;
+        b.onclick = () => toggleShape(s.id); g.appendChild(b);
     });
     refreshShapesUI();
 }
 function buildPalettes() {
-    const list = document.getElementById('palette-list');
-    list.innerHTML = '';
+    const list = document.getElementById('palette-list'); list.innerHTML = '';
     PALETTES.forEach(p => {
-        const btn = document.createElement('div');
-        btn.className = 'palette-btn'; btn.dataset.id = p.id;
-        let swatches = '<div class="swatches">';
-        p.colors.slice(0,6).forEach(c => { swatches += `<div class="swatch" style="background:${c}"></div>`; });
-        swatches += '</div>';
-        btn.innerHTML = swatches + `<span class="pal-name">${p.label}</span>`;
-        btn.onclick = () => setPalette(p.id);
-        list.appendChild(btn);
+        const b = document.createElement('div');
+        b.className = 'palette-btn'; b.dataset.id = p.id;
+        let sw = '<div class="swatches">';
+        p.colors.slice(0,6).forEach(c => { sw += `<div class="swatch" style="background:${c}"></div>`; });
+        sw += '</div>';
+        b.innerHTML = sw + `<span class="pal-name">${p.label}</span>`;
+        b.onclick = () => setPalette(p.id); list.appendChild(b);
     });
     refreshPalettesUI();
 }
-function refreshModeUI() {
-    document.querySelectorAll('#mode-grid .btn').forEach(b => b.classList.toggle('active', b.dataset.id === state.mode));
-}
-function refreshShapesUI() {
-    document.querySelectorAll('#shapes-grid .shape-btn').forEach(b => b.classList.toggle('active', state.activeShapes.includes(b.dataset.id)));
-}
-function refreshPalettesUI() {
-    document.querySelectorAll('#palette-list .palette-btn').forEach(b => b.classList.toggle('active', b.dataset.id === state.palette));
-}
-function refreshPresetUI(presetId) {
-    document.querySelectorAll('#preset-grid .preset-btn').forEach(b => b.classList.toggle('active', b.dataset.id === presetId));
-}
+function refreshModeUI() { document.querySelectorAll('#mode-grid .btn').forEach(b => b.classList.toggle('active', b.dataset.id === state.mode)); }
+function refreshShapesUI() { document.querySelectorAll('#shapes-grid .shape-btn').forEach(b => b.classList.toggle('active', state.activeShapes.includes(b.dataset.id))); }
+function refreshPalettesUI() { document.querySelectorAll('#palette-list .palette-btn').forEach(b => b.classList.toggle('active', b.dataset.id === state.palette)); }
+function refreshPresetUI(id) { document.querySelectorAll('#preset-grid .preset-btn').forEach(b => b.classList.toggle('active', b.dataset.id === id)); }
 function refreshAllControls() {
-    ['cellSize','contrast','brightness','threshold','sparsity','reactivity','scanlines','noiseAmt','glow'].forEach(id => {
-        const el = document.getElementById(id);
-        if (!el) return;
+    ['cellSize','contrast','threshold','sparsity','reactivity','scanlines','glow'].forEach(id => {
+        const el = document.getElementById(id); if (!el) return;
         el.value = state[id];
         document.getElementById(id + '-val').textContent = state[id];
     });
     document.getElementById('colorMode').value = state.colorMode;
     document.getElementById('tintColor').value = state.tintColor;
     document.getElementById('tintColor-hex').textContent = state.tintColor;
-    document.getElementById('bgColor').value = state.bgColor;
-    document.getElementById('bgColor-hex').textContent = state.bgColor;
+    const bg = state.bgColor || getBg();
+    document.getElementById('bgColor').value = bg.length === 7 ? bg : '#0a0c0e';
+    document.getElementById('bgColor-hex').textContent = state.bgColor || 'theme';
     document.getElementById('mouseReactive').checked = state.mouseReactive;
     document.getElementById('mutateOnMotion').checked = state.mutateOnMotion;
     refreshModeUI(); refreshShapesUI(); refreshPalettesUI();
@@ -486,24 +515,22 @@ function refreshAllControls() {
 
 function setMode(id) { state.mode = id; refreshModeUI(); refreshPresetUI(null); resetCells(); }
 function setPalette(id) { state.palette = id; refreshPalettesUI(); refreshPresetUI(null); resetCells(); }
-function toggleShape(shape) {
-    const i = state.activeShapes.indexOf(shape);
-    if (i >= 0) { if (state.activeShapes.length > 1) state.activeShapes.splice(i, 1); }
-    else state.activeShapes.push(shape);
+function toggleShape(s) {
+    const i = state.activeShapes.indexOf(s);
+    if (i >= 0) { if (state.activeShapes.length > 1) state.activeShapes.splice(i,1); }
+    else state.activeShapes.push(s);
     refreshShapesUI(); refreshPresetUI(null); resetCells();
 }
 function applyPreset(p) {
     Object.assign(state, p.config);
     if (p.config.activeShapes) state.activeShapes = [...p.config.activeShapes];
-    refreshAllControls();
-    refreshPresetUI(p.id);
-    resetCells();
+    refreshAllControls(); refreshPresetUI(p.id); resetCells();
 }
 function resetCells() { cells = []; gridCols = 0; gridRows = 0; prevFrameData = null; cellMorseCache = []; }
 function resetAll() { applyPreset(PRESETS[0]); }
 
 function wireControls() {
-    ['cellSize','contrast','brightness','threshold','sparsity','reactivity','scanlines','noiseAmt','glow'].forEach(id => {
+    ['cellSize','contrast','threshold','sparsity','reactivity','scanlines','glow'].forEach(id => {
         const el = document.getElementById(id);
         el.addEventListener('input', () => {
             state[id] = parseFloat(el.value);
@@ -535,15 +562,17 @@ function wireControls() {
 
 function handleFile(file) {
     if (!file) return;
-    let url = URL.createObjectURL(file);
+    const url = URL.createObjectURL(file);
     video.src = url; video.muted = isMuted;
     video.addEventListener('loadedmetadata', () => {
-        setupCanvas();
+        const vw = video.videoWidth, vh = video.videoHeight;
+        outCanvas.width = vw; outCanvas.height = vh;
+        resetCells();
         document.getElementById('uploadZone').classList.add('hidden');
         outCanvas.classList.remove('hidden');
         document.getElementById('transport').classList.remove('hidden');
         video.play(); isPlaying = true;
-        document.getElementById('playBtn').innerHTML = '&#9646;&#9646;';
+        document.getElementById('playBtn').innerHTML = '❚❚';
         renderLoop();
     }, { once: true });
 }
@@ -553,28 +582,16 @@ document.addEventListener('drop', e => {
     e.preventDefault();
     if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
 });
-function setupCanvas() {
-    let vw = video.videoWidth, vh = video.videoHeight;
-    outCanvas.width = vw; outCanvas.height = vh;
-    sampleCanvas.width = vw; sampleCanvas.height = vh;
-    resetCells();
-}
 
 function togglePlay() {
-    if (isPlaying) {
-        video.pause(); isPlaying = false;
-        document.getElementById('playBtn').innerHTML = '&#9654;';
-    } else {
-        video.play(); isPlaying = true;
-        document.getElementById('playBtn').innerHTML = '&#9646;&#9646;';
-        renderLoop();
-    }
+    if (isPlaying) { video.pause(); isPlaying = false; document.getElementById('playBtn').innerHTML = '▶'; }
+    else { video.play(); isPlaying = true; document.getElementById('playBtn').innerHTML = '❚❚'; renderLoop(); }
 }
 function toggleMute() {
     isMuted = !isMuted; video.muted = isMuted;
-    document.getElementById('muteBtn').innerHTML = isMuted ? '&#128263;' : '&#128266;';
+    document.getElementById('muteBtn').innerHTML = isMuted ? '🔇' : '🔊';
 }
-function seek(val) { if (video.duration) video.currentTime = (val / 100) * video.duration; }
+function seek(v) { if (video.duration) video.currentTime = (v/100) * video.duration; }
 function updateTransport() {
     if (!video.duration) return;
     document.getElementById('seek-bar').value = (video.currentTime / video.duration) * 100;
@@ -582,17 +599,21 @@ function updateTransport() {
     document.getElementById('timeDisplay').textContent = fmt(video.currentTime) + ' / ' + fmt(video.duration);
 }
 
-function renderLoop() {
+function renderLoop(ts) {
     if (!isPlaying && !isRecording) return;
-    renderFrame();
-    updateTransport();
-    timeT += 0.016;
+    if (!lastFrameTime) lastFrameTime = ts || 0;
+    const now = ts || performance.now();
+    const elapsed = now - lastFrameTime;
+    if (elapsed >= FRAME_INTERVAL) {
+        lastFrameTime = now - (elapsed % FRAME_INTERVAL);
+        renderFrame();
+        updateTransport();
+        timeT += 0.033;
+    }
     animFrame = requestAnimationFrame(renderLoop);
 }
-function getPaletteColors() {
-    const p = PALETTES.find(x => x.id === state.palette) || PALETTES[0];
-    return p.colors;
-}
+
+function getPaletteColors() { return (PALETTES.find(x => x.id === state.palette) || PALETTES[0]).colors; }
 function hexToRGB(hex) {
     return [parseInt(hex.substr(1,2),16), parseInt(hex.substr(3,2),16), parseInt(hex.substr(5,2),16)];
 }
@@ -603,22 +624,23 @@ function ensureCellGrid(vw, vh) {
     const rows = Math.floor(vh / cs);
     if (cols === gridCols && rows === gridRows && cells.length === cols * rows) return;
     gridCols = cols; gridRows = rows;
-    cells = []; cellMorseCache = [];
+    cells = new Array(cols * rows);
+    cellMorseCache = new Array(cols * rows);
     const rng = mulberry32(12345);
     const pal = getPaletteColors();
-    const activeShapes = state.activeShapes.length ? state.activeShapes : ['dot'];
+    const act = state.activeShapes.length ? state.activeShapes : ['dot'];
     for (let i = 0; i < cols * rows; i++) {
-        const col = i % cols, row = Math.floor(i / cols);
-        const sNoise = fbm(col * 0.08 + 100, row * 0.08 + 100, 3);
-        const cNoise = fbm(col * 0.06 + 200, row * 0.06 + 200, 3);
-        cells.push({
-            shape: activeShapes[Math.floor(sNoise * activeShapes.length) % activeShapes.length],
-            colorIdx: Math.floor(cNoise * pal.length) % pal.length,
+        const col = i % cols, row = (i / cols) | 0;
+        const sN = noise2D(col * 0.08 + 100, row * 0.08 + 100);
+        const cN = noise2D(col * 0.06 + 200, row * 0.06 + 200);
+        cells[i] = {
+            shape: act[Math.floor(sN * act.length) % act.length],
+            colorIdx: Math.floor(cN * pal.length) % pal.length,
             phase: rng() * Math.PI * 2,
             energy: 0, targetEnergy: 0, motionAccum: 0,
-            baseSize: 0.4 + sNoise * 0.55,
-        });
-        cellMorseCache.push(MORSE_MAP[ALPHA[Math.floor(rng() * 26)]]);
+            baseSize: 0.4 + sN * 0.55,
+        };
+        cellMorseCache[i] = MORSE_MAP[ALPHA[Math.floor(rng() * 26)]];
     }
     prevFrameData = null;
     gridSampleCanvas.width = cols;
@@ -629,10 +651,8 @@ function renderFrame() {
     const vw = video.videoWidth, vh = video.videoHeight;
     if (!vw || !vh) return;
     ensureCellGrid(vw, vh);
-    const cs = state.cellSize;
-    const cols = gridCols, rows = gridRows;
+    const cs = state.cellSize, cols = gridCols, rows = gridRows;
 
-    // Sample at grid resolution
     gridSampleCtx.drawImage(video, 0, 0, cols, rows);
     const frame = gridSampleCtx.getImageData(0, 0, cols, rows);
     const data = frame.data;
@@ -641,10 +661,11 @@ function renderFrame() {
     const pal = getPaletteColors();
     const tintRGB = hexToRGB(state.tintColor);
 
-    outCtx.fillStyle = state.bgColor;
+    outCtx.fillStyle = getBg();
     outCtx.fillRect(0, 0, vw, vh);
 
-    const mouseActive = state.mouseReactive && mousePos.x >= 0;
+    const mouseOn = state.mouseReactive && mousePos.x >= 0;
+    const contrastV = state.contrast, threshV = state.threshold, sparsV = state.sparsity, reactV = state.reactivity;
 
     if (state.glow > 0) {
         outCtx.shadowColor = state.colorMode === 'mono'
@@ -652,92 +673,89 @@ function renderFrame() {
         outCtx.shadowBlur = state.glow;
     } else outCtx.shadowBlur = 0;
 
-    for (let row = 0; row < rows; row++) {
-        for (let col = 0; col < cols; col++) {
-            const i = row * cols + col;
-            const pi = i * 4;
-            const r = data[pi], g = data[pi+1], b = data[pi+2];
-            let lum = (r*0.299 + g*0.587 + b*0.114) / 255;
+    for (let i = 0; i < cells.length; i++) {
+        const pi = i * 4;
+        const r = data[pi], g = data[pi+1], b = data[pi+2];
+        let lum = (r*0.299 + g*0.587 + b*0.114) / 255;
 
-            let motion = 0;
-            if (prev) motion = (Math.abs(r-prev[pi]) + Math.abs(g-prev[pi+1]) + Math.abs(b-prev[pi+2])) / (255*3);
+        let motion = 0;
+        if (prev) motion = (Math.abs(r-prev[pi]) + Math.abs(g-prev[pi+1]) + Math.abs(b-prev[pi+2])) / 765;
 
-            const cell = cells[i];
-            cell.motionAccum = cell.motionAccum * 0.92 + motion * 3.5;
-            cell.motionAccum = Math.min(cell.motionAccum, 1.5);
+        const cell = cells[i];
+        cell.motionAccum = cell.motionAccum * 0.92 + motion * 3.5;
+        if (cell.motionAccum > 1.5) cell.motionAccum = 1.5;
 
-            lum = (lum - 0.5) * state.contrast + 0.5 + state.brightness / 255;
-            if (state.noiseAmt > 0) lum += (Math.random() - 0.5) * state.noiseAmt * 2;
-            lum = Math.max(0, Math.min(1, lum));
+        lum = (lum - 0.5) * contrastV + 0.5;
+        if (lum < 0) lum = 0; else if (lum > 1) lum = 1;
 
-            const noiseX = col * 0.04 + timeT * 0.15 + Math.sin(timeT * 0.3) * 0.5;
-            const noiseY = row * 0.04 + timeT * 0.08 + Math.cos(timeT * 0.25) * 0.3;
-            const density = fbm(noiseX, noiseY, 4);
+        const col = i % cols, row = (i / cols) | 0;
+        const nx = col * 0.04 + timeT * 0.15;
+        const ny = row * 0.04 + timeT * 0.08;
+        const density = fbm2(nx, ny);
 
-            let mouseBoost = 0;
-            if (mouseActive) {
-                const nx = col / cols, ny = row / rows;
-                const dx = nx - mousePos.x, dy = ny - mousePos.y;
-                const dist = Math.sqrt(dx*dx + dy*dy);
-                mouseBoost = Math.max(0, 1 - dist / 0.25) * 0.6;
+        let mouseBoost = 0;
+        if (mouseOn) {
+            const mx = col / cols, my = row / rows;
+            const dx = mx - mousePos.x, dy = my - mousePos.y;
+            const dist2 = dx*dx + dy*dy;
+            if (dist2 < 0.0625) mouseBoost = (1 - Math.sqrt(dist2) / 0.25) * 0.6;
+        }
+
+        const noiseAlive = (density > sparsV || mouseBoost > 0.1);
+        const lumAlive = lum > threshV;
+
+        const cx = col * cs + cs * 0.5;
+        const cy = row * cs + cs * 0.5;
+        const x = col * cs, y = row * cs;
+
+        if (state.mode === 'aura') {
+            const alive = (noiseAlive && lumAlive) ? 1 : 0;
+            cell.targetEnergy = alive * Math.min(1, lum * 0.5 + cell.motionAccum * 0.9 + mouseBoost);
+
+            if (state.mutateOnMotion && motion > 0.06) {
+                if (Math.random() < motion * 2.5 && state.activeShapes.length) {
+                    cell.shape = state.activeShapes[(Math.random() * state.activeShapes.length) | 0];
+                }
+                if (Math.random() < motion * 1.8) cell.colorIdx = (Math.random() * pal.length) | 0;
             }
 
-            const noiseAlive = (density > state.sparsity || mouseBoost > 0.1);
-            const lumAlive = lum > state.threshold;
+            cell.energy += (cell.targetEnergy - cell.energy) * reactV;
+            if (cell.energy < 0.03) continue;
 
-            const cx = col * cs + cs * 0.5;
-            const cy = row * cs + cs * 0.5;
-            const x = col * cs, y = row * cs;
+            const pulse = 1 + Math.sin(timeT * 1.2 + cell.phase) * 0.1 * cell.energy;
+            const drawSize = cs * cell.baseSize * pulse;
+            const alpha = Math.min(1, cell.energy * 1.3);
 
-            if (state.mode === 'aura') {
-                const alive = (noiseAlive && lumAlive) ? 1 : 0;
-                cell.targetEnergy = alive * Math.min(1, lum * 0.5 + cell.motionAccum * 0.9 + mouseBoost);
+            let color;
+            if (state.colorMode === 'mono') color = state.tintColor;
+            else if (state.colorMode === 'source') color = `rgb(${r|0},${g|0},${b|0})`;
+            else color = pal[cell.colorIdx % pal.length];
 
-                if (state.mutateOnMotion && motion > 0.06) {
-                    if (Math.random() < motion * 2.5 && state.activeShapes.length) {
-                        cell.shape = state.activeShapes[Math.floor(Math.random() * state.activeShapes.length)];
-                    }
-                    if (Math.random() < motion * 1.8) cell.colorIdx = Math.floor(Math.random() * pal.length);
-                }
-
-                cell.energy += (cell.targetEnergy - cell.energy) * state.reactivity;
-                if (cell.energy < 0.03) continue;
-
-                const pulse = 1 + Math.sin(timeT * 1.2 + cell.phase) * 0.1 * cell.energy;
-                const drawSize = cs * cell.baseSize * pulse;
-                const alpha = Math.min(1, cell.energy * 1.3);
-
-                let color;
-                if (state.colorMode === 'mono') color = state.tintColor;
-                else if (state.colorMode === 'source') color = `rgb(${r|0},${g|0},${b|0})`;
-                else color = pal[cell.colorIdx % pal.length];
-
-                drawShape(outCtx, x + (cs - drawSize)/2, y + (cs - drawSize)/2, drawSize, cell.shape, color, alpha);
-            } else {
-                if (lum < state.threshold) {
-                    const savedBlur = outCtx.shadowBlur;
-                    outCtx.shadowBlur = 0;
-                    outCtx.fillStyle = `rgba(${tintRGB[0]},${tintRGB[1]},${tintRGB[2]},0.06)`;
-                    const ds = Math.max(1, cs * 0.08);
-                    outCtx.fillRect(cx - ds*0.5, cy - ds*0.5, ds, ds);
-                    outCtx.shadowBlur = savedBlur;
-                    continue;
-                }
-                let cr, cg, cb;
-                if (state.colorMode === 'mono') { cr = tintRGB[0]; cg = tintRGB[1]; cb = tintRGB[2]; }
-                else if (state.colorMode === 'source') { cr = Math.min(255, r*1.2); cg = Math.min(255, g*1.2); cb = Math.min(255, b*1.2); }
-                else {
-                    const palColor = pal[cell.colorIdx % pal.length];
-                    [cr, cg, cb] = hexToRGB(palColor);
-                }
-                if (state.mode === 'morse') drawMorseInCell(outCtx, cx, cy, cs, lum, cr, cg, cb, i);
-                else drawCharInCell(outCtx, cx, cy, cs, lum, cr, cg, cb, state.mode);
+            drawShape(outCtx, x + (cs - drawSize)/2, y + (cs - drawSize)/2, drawSize, cell.shape, color, alpha);
+        } else {
+            if (lum < threshV) {
+                outCtx.globalAlpha = 0.06;
+                outCtx.fillStyle = `rgb(${tintRGB[0]},${tintRGB[1]},${tintRGB[2]})`;
+                const ds = Math.max(1, cs * 0.08);
+                outCtx.fillRect(cx - ds*0.5, cy - ds*0.5, ds, ds);
+                outCtx.globalAlpha = 1;
+                continue;
             }
+            let cr, cg, cb;
+            if (state.colorMode === 'mono') { cr = tintRGB[0]; cg = tintRGB[1]; cb = tintRGB[2]; }
+            else if (state.colorMode === 'source') { cr = Math.min(255, r*1.2); cg = Math.min(255, g*1.2); cb = Math.min(255, b*1.2); }
+            else {
+                const rgb = hexToRGB(pal[cell.colorIdx % pal.length]);
+                cr = rgb[0]; cg = rgb[1]; cb = rgb[2];
+            }
+            if (state.mode === 'morse') drawMorseInCell(outCtx, cx, cy, cs, lum, cr, cg, cb, i);
+            else drawCharInCell(outCtx, cx, cy, cs, lum, cr, cg, cb, state.mode);
         }
     }
 
     prevFrameData = new Uint8ClampedArray(data);
     outCtx.shadowBlur = 0;
+    outCtx.globalAlpha = 1;
 
     if (state.scanlines > 0) {
         outCtx.fillStyle = `rgba(0,0,0,${state.scanlines * 0.3})`;
@@ -753,11 +771,9 @@ function drawShape(ctx, x, y, s, shape, color, alpha) {
     switch (shape) {
         case 'circle': ctx.beginPath(); ctx.arc(x+half, y+half, half*0.85, 0, Math.PI*2); ctx.fill(); break;
         case 'ring': ctx.beginPath(); ctx.arc(x+half, y+half, half*0.75, 0, Math.PI*2); ctx.stroke(); break;
-        case 'cross': {
-            const arm = s*0.12, ext = half*0.8;
+        case 'cross': { const arm = s*0.12, ext = half*0.8;
             ctx.fillRect(x+half-arm, y+half-ext, arm*2, ext*2);
-            ctx.fillRect(x+half-ext, y+half-arm, ext*2, arm*2); break;
-        }
+            ctx.fillRect(x+half-ext, y+half-arm, ext*2, arm*2); break; }
         case 'rect': ctx.fillRect(x+s*0.12, y+s*0.12, s*0.76, s*0.76); break;
         case 'dot': ctx.beginPath(); ctx.arc(x+half, y+half, half*0.3, 0, Math.PI*2); ctx.fill(); break;
         case 'dash': ctx.fillRect(x+s*0.1, y+half-s*0.08, s*0.8, s*0.16); break;
@@ -770,28 +786,30 @@ function drawShape(ctx, x, y, s, shape, color, alpha) {
     ctx.globalAlpha = 1;
 }
 
-function drawMorseInCell(ctx, cx, cy, size, lum, r, g, b, cellIdx) {
-    const morseStr = cellMorseCache[cellIdx % cellMorseCache.length];
+function drawMorseInCell(ctx, cx, cy, size, lum, r, g, b, idx) {
+    const morseStr = cellMorseCache[idx % cellMorseCache.length];
     if (!morseStr) return;
-    ctx.fillStyle = `rgba(${Math.round(r)},${Math.round(g)},${Math.round(b)},${lum.toFixed(3)})`;
-    const elements = morseStr.split('');
-    if (lum > 0.8) { const s = size * (0.5 + lum * 0.4); ctx.fillRect(cx - s*0.5, cy - s*0.5, s, s); return; }
+    ctx.globalAlpha = lum;
+    ctx.fillStyle = `rgb(${r|0},${g|0},${b|0})`;
+    const els = morseStr.split('');
+    if (lum > 0.8) { const s = size * (0.5 + lum * 0.4); ctx.fillRect(cx - s*0.5, cy - s*0.5, s, s); ctx.globalAlpha = 1; return; }
     if (lum > 0.25) {
         const unitW = size * 0.1, dotW = unitW, dashW = unitW * 3, gap = unitW * 0.8, h = unitW * 1.8;
         let totalW = 0;
-        for (const e of elements) totalW += (e === '.') ? dotW : dashW;
-        totalW += (elements.length - 1) * gap;
-        const fitScale = Math.min(1, (size * 0.85) / Math.max(totalW, 1));
-        let drawX = cx - totalW * fitScale * 0.5;
-        for (const e of elements) {
-            const w = ((e === '.') ? dotW : dashW) * fitScale;
-            ctx.fillRect(drawX, cy - h*fitScale*0.5, w, h*fitScale);
-            drawX += w + gap * fitScale;
+        for (const e of els) totalW += (e === '.') ? dotW : dashW;
+        totalW += (els.length - 1) * gap;
+        const fit = Math.min(1, (size * 0.85) / Math.max(totalW, 1));
+        let dx = cx - totalW * fit * 0.5;
+        for (const e of els) {
+            const w = ((e === '.') ? dotW : dashW) * fit;
+            ctx.fillRect(dx, cy - h*fit*0.5, w, h*fit);
+            dx += w + gap * fit;
         }
-        return;
+        ctx.globalAlpha = 1; return;
     }
     const s = size * (0.08 + lum * 0.5);
     ctx.fillRect(cx - s*0.5, cy - s*0.5, s, s);
+    ctx.globalAlpha = 1;
 }
 
 function drawCharInCell(ctx, cx, cy, size, lum, r, g, b, mode) {
@@ -800,15 +818,17 @@ function drawCharInCell(ctx, cx, cy, size, lum, r, g, b, mode) {
     const idx = Math.min(chars.length - 1, Math.floor(lum * (chars.length - 1)));
     const ch = chars[idx];
     if (ch === ' ') return;
-    ctx.fillStyle = `rgba(${Math.round(r)},${Math.round(g)},${Math.round(b)},${lum.toFixed(3)})`;
-    ctx.font = `${Math.floor(size * 0.9)}px "IBM Plex Mono", monospace`;
+    ctx.globalAlpha = lum;
+    ctx.fillStyle = `rgb(${r|0},${g|0},${b|0})`;
+    ctx.font = `${Math.floor(size * 0.9)}px "DM Mono", monospace`;
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.fillText(ch, cx, cy);
+    ctx.globalAlpha = 1;
 }
 
 function exportFrame() {
     const link = document.createElement('a');
-    link.download = `signal-cartography-${state.mode}-${Date.now()}.png`;
+    link.download = `video-shader-${state.mode}-${Date.now()}.png`;
     link.href = outCanvas.toDataURL('image/png');
     link.click();
 }
@@ -818,20 +838,16 @@ function startRecording() {
     recordedChunks = [];
     let stream = outCanvas.captureStream(30);
     if (!isMuted && video.captureStream) {
-        try {
-            const audioStream = video.captureStream();
-            audioStream.getAudioTracks().forEach(t => stream.addTrack(t));
-        } catch(e) {}
+        try { const a = video.captureStream(); a.getAudioTracks().forEach(t => stream.addTrack(t)); } catch(e) {}
     }
-    try {
-        mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm;codecs=vp9', videoBitsPerSecond: 8000000 });
-    } catch(e) { mediaRecorder = new MediaRecorder(stream); }
+    try { mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm;codecs=vp9', videoBitsPerSecond: 8000000 }); }
+    catch(e) { mediaRecorder = new MediaRecorder(stream); }
     mediaRecorder.ondataavailable = e => { if (e.data.size > 0) recordedChunks.push(e.data); };
     mediaRecorder.onstop = () => {
         const blob = new Blob(recordedChunks, { type: 'video/webm' });
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
-        link.download = `signal-cartography-${state.mode}.webm`;
+        link.download = `video-shader-${state.mode}.webm`;
         link.href = url; link.click();
     };
     mediaRecorder.start();
@@ -850,6 +866,7 @@ function stopRecording() {
     document.getElementById('recIndicator').classList.add('hidden');
 }
 
+applyTheme(state.theme);
 buildPresets();
 buildModes();
 buildShapes();
